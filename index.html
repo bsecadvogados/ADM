@@ -3,62 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BSC Advogados | Portal Financeiro</title>
+    <title>BSC Advogados | ERP Financeiro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --bsc-verde: #004d2c;
-            --bsc-dourado: #c5a36b;
-            --bsc-bg: #f3f4f6;
-        }
+        :root { --bsc-verde: #004d2c; --bsc-dourado: #c5a36b; --bsc-bg: #f3f4f6; }
         body { background-color: var(--bsc-bg); font-family: 'Inter', system-ui, sans-serif; }
         .tab-btn { transition: all 0.3s ease; }
         .tab-active { border-bottom: 3px solid var(--bsc-verde); color: var(--bsc-verde); font-weight: 700; }
         .status-pago { background-color: #dcfce7; color: #166534; }
         .status-pendente { background-color: #fef08a; color: #854d0e; }
         .status-atrasado { background-color: #fee2e2; color: #991b1b; }
+        .tipo-receita { color: #15803d; font-weight: bold; }
+        .tipo-despesa { color: #b91c1c; font-weight: bold; }
         .login-bg { background: linear-gradient(135deg, #004d2c 0%, #002a18 100%); }
     </style>
 </head>
 <body class="text-gray-800 antialiased">
+
+    <div id="modal-lancamento" class="fixed inset-0 bg-black bg-opacity-50 z-[200] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+            <div class="bg-[#004d2c] px-6 py-4 flex justify-between items-center">
+                <h3 class="text-white font-bold text-lg">Novo Lançamento Financeiro</h3>
+                <button onclick="fecharModal()" class="text-white hover:text-gray-300 font-bold text-xl">&times;</button>
+            </div>
+            <form id="form-lancamento" onsubmit="salvarLancamento(event)" class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Tipo</label>
+                        <select id="inp-tipo" class="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-[#004d2c]">
+                            <option value="Despesa">Despesa (Saída)</option>
+                            <option value="Receita">Receita (Entrada)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Valor (R$)</label>
+                        <input type="number" step="0.01" id="inp-valor" required class="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-[#004d2c]" placeholder="Ex: 1500.00">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Descrição / Favorecido / Cliente</label>
+                    <input type="text" id="inp-descricao" required class="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-[#004d2c]" placeholder="Nome da pessoa ou empresa">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Categoria</label>
+                        <input type="text" id="inp-categoria" required class="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-[#004d2c]" placeholder="Ex: Honorários, Impostos...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Vencimento</label>
+                        <input type="date" id="inp-vencimento" required class="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-[#004d2c]">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Status</label>
+                    <select id="inp-status" class="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-[#004d2c]">
+                        <option value="Pago">Pago / Recebido</option>
+                        <option value="Pendente">Pendente</option>
+                    </select>
+                </div>
+                <div class="pt-4 flex justify-end gap-3">
+                    <button type="button" onclick="fecharModal()" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-bold">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-[#004d2c] hover:bg-[#003820] text-white rounded-lg font-bold">Salvar Lançamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <div id="login-screen" class="min-h-screen login-bg flex flex-col items-center justify-center px-4 fixed inset-0 z-[100] transition-opacity duration-500">
         <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md text-center transform transition-all">
             <img src="logo-bsc.png" alt="Logo BSC" class="h-24 mx-auto mb-6">
             <h2 class="text-2xl font-black text-[#004d2c] uppercase tracking-wider mb-1">Acesso Restrito</h2>
             <p class="text-sm font-semibold text-[#c5a36b] tracking-widest uppercase mb-8">Controladoria Financeira</p>
-            
             <div class="space-y-4">
                 <div>
-                    <input type="password" id="pwd-input" placeholder="Digite a senha de acesso" 
-                           class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#004d2c] focus:ring-0 outline-none transition text-center text-lg font-mono"
-                           onkeypress="handleEnter(event)">
-                    <p id="login-error" class="text-red-500 text-xs font-bold mt-2 hidden">Senha incorreta. Tente novamente.</p>
+                    <input type="password" id="pwd-input" placeholder="Digite a senha de acesso" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#004d2c] focus:ring-0 outline-none transition text-center text-lg font-mono" onkeypress="handleEnter(event)">
+                    <p id="login-error" class="text-red-500 text-xs font-bold mt-2 hidden">Senha incorreta.</p>
                 </div>
-                <button onclick="authenticate()" class="w-full bg-[#004d2c] hover:bg-[#003820] text-white font-bold py-3 px-4 rounded-xl transition shadow-lg uppercase tracking-wide">
-                    Acessar Dashboard
-                </button>
+                <button onclick="authenticate()" class="w-full bg-[#004d2c] hover:bg-[#003820] text-white font-bold py-3 px-4 rounded-xl transition shadow-lg uppercase tracking-wide">Acessar Sistema</button>
             </div>
         </div>
     </div>
 
-    <div id="app-content" class="hidden opacity-0 transition-opacity duration-700">
+    <div id="app-content" class="hidden opacity-0 transition-opacity duration-700 pb-20">
         <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
             <div class="container mx-auto px-6 py-4 flex flex-col lg:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-4">
                     <img src="logo-bsc.png" alt="Logo BSC" class="h-14">
                     <div>
                         <h1 class="text-xl font-bold text-[#004d2c] tracking-tight">Barcellos, Sakumoto & Carvalho</h1>
-                        <p class="text-xs font-semibold text-[#c5a36b] uppercase tracking-widest">Controladoria Financeira</p>
+                        <p class="text-xs font-semibold text-[#c5a36b] uppercase tracking-widest">ERP Financeiro Integrado</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-6 text-sm font-medium">
-                    <div class="flex gap-2">
-                        <button onclick="changeView('dashboard')" id="btn-dashboard" class="tab-btn tab-active pb-1 px-2">Dashboard</button>
+                    <button onclick="abrirModal()" class="bg-[#c5a36b] hover:bg-[#b08d55] text-white px-4 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
+                        <span>+</span> Lançar Entrada/Saída
+                    </button>
+                    <div class="flex gap-2 border-l pl-6 border-gray-200">
+                        <button onclick="changeView('dashboard')" id="btn-dashboard" class="tab-btn tab-active pb-1 px-2">Resumo</button>
                         <button onclick="changeView('extrato')" id="btn-extrato" class="tab-btn pb-1 px-2 text-gray-500 hover:text-[#004d2c]">Livro Razão</button>
                     </div>
-                    <button onclick="logout()" class="ml-4 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg transition font-bold">Sair</button>
+                    <button onclick="logout()" class="ml-2 text-xs text-gray-400 hover:text-red-600 font-bold underline">Sair</button>
                 </div>
             </div>
         </nav>
@@ -66,30 +111,31 @@
         <main class="container mx-auto py-8 px-6">
             
             <div id="view-dashboard" class="block space-y-8 animate-fade-in">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-[#004d2c]">
-                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Despesa Total (Mar/26)</h3>
-                        <p class="text-3xl font-black text-[#004d2c]" id="kpi-total">R$ 0,00</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-green-500">
-                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Total Pago</h3>
-                        <p class="text-3xl font-black text-green-600" id="kpi-pago">R$ 0,00</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-orange-400">
-                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">A Vencer</h3>
-                        <p class="text-3xl font-black text-orange-500" id="kpi-pendente">R$ 0,00</p>
+                <div class="flex justify-end">
+                    <select id="dash-month-filter" onchange="calcularDashboard()" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2 font-bold shadow-sm outline-none">
+                        <option value="02/2026">Fevereiro / 2026</option>
+                        <option value="03/2026" selected>Março / 2026 (Atual)</option>
+                        <option value="04/2026">Abril / 2026</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-green-600">
+                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Total Receitas (Entradas)</h3>
+                        <p class="text-3xl font-black text-green-600" id="kpi-receitas">R$ 0,00</p>
                     </div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-red-600">
-                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Em Atraso</h3>
-                        <p class="text-3xl font-black text-red-600" id="kpi-atrasado">R$ 0,00</p>
+                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Total Despesas (Saídas)</h3>
+                        <p class="text-3xl font-black text-red-600" id="kpi-despesas">R$ 0,00</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-[#004d2c]">
+                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Lucro Líquido do Mês</h3>
+                        <p class="text-3xl font-black text-[#004d2c]" id="kpi-lucro">R$ 0,00</p>
                     </div>
                 </div>
 
                 <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-lg font-bold text-[#004d2c]">Projeção de Saídas (Fev - Abr)</h2>
-                        <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full font-bold">Visão Macro</span>
-                    </div>
+                    <h2 class="text-lg font-bold text-[#004d2c] mb-6">Balanço: Receitas x Despesas</h2>
                     <div class="h-[350px]">
                         <canvas id="fluxoChart"></canvas>
                     </div>
@@ -98,15 +144,13 @@
 
             <div id="view-extrato" class="hidden space-y-6 animate-fade-in">
                 <div class="bg-white p-6 rounded-2xl shadow-sm flex justify-between items-center border border-gray-100">
-                    <h2 class="text-lg font-bold text-[#004d2c]">Lançamentos de Despesas</h2>
-                    <div class="flex items-center gap-3">
-                        <label class="text-sm font-semibold text-gray-500">Competência:</label>
-                        <select id="month-filter" onchange="renderTable()" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#004d2c] focus:border-[#004d2c] block w-48 p-2.5 outline-none font-bold">
-                            <option value="02/2026">Fevereiro / 2026</option>
-                            <option value="03/2026" selected>Março / 2026 (Atual)</option>
-                            <option value="04/2026">Abril / 2026 (Projeção)</option>
-                        </select>
-                    </div>
+                    <h2 class="text-lg font-bold text-[#004d2c]">Livro Razão Analítico</h2>
+                    <select id="month-filter" onchange="renderTable()" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg p-2.5 outline-none font-bold">
+                        <option value="Todos">Todos os Meses</option>
+                        <option value="02/2026">Fevereiro / 2026</option>
+                        <option value="03/2026" selected>Março / 2026</option>
+                        <option value="04/2026">Abril / 2026</option>
+                    </select>
                 </div>
 
                 <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
@@ -114,22 +158,17 @@
                         <table class="w-full text-left text-sm text-gray-600">
                             <thead class="bg-gray-50 text-gray-700 uppercase font-bold text-xs border-b">
                                 <tr>
-                                    <th class="px-6 py-4">Status</th>
+                                    <th class="px-6 py-4">Tipo</th>
                                     <th class="px-6 py-4">Vencimento</th>
-                                    <th class="px-6 py-4">Pagamento</th>
-                                    <th class="px-6 py-4">Favorecido / Empresa</th>
+                                    <th class="px-6 py-4">Descrição / Cliente</th>
                                     <th class="px-6 py-4">Categoria</th>
                                     <th class="px-6 py-4 text-right">Valor (R$)</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4 text-center">Ação</th>
                                 </tr>
                             </thead>
                             <tbody id="table-body" class="divide-y divide-gray-100">
                                 </tbody>
-                            <tfoot class="bg-gray-50 font-bold text-gray-900">
-                                <tr>
-                                    <td colspan="5" class="px-6 py-4 text-right uppercase text-xs">Total do Mês:</td>
-                                    <td class="px-6 py-4 text-right text-[#004d2c] text-lg" id="table-total">R$ 0,00</td>
-                                </tr>
-                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -138,162 +177,223 @@
     </div>
 
     <script>
+        // ==========================================
         // 1. SISTEMA DE AUTENTICAÇÃO
+        // ==========================================
         const SECRET_KEY = "BSCADV";
-        let chartInstance = null;
-
-        function checkAuthStatus() {
-            if (sessionStorage.getItem('bsc_auth') === 'true') unlockDashboard();
-        }
-
-        function handleEnter(e) {
-            if (e.key === 'Enter') authenticate();
-        }
-
+        
+        function checkAuthStatus() { if (sessionStorage.getItem('bsc_auth') === 'true') unlockDashboard(); }
+        function handleEnter(e) { if (e.key === 'Enter') authenticate(); }
+        
         function authenticate() {
-            const input = document.getElementById('pwd-input').value;
-            const errorMsg = document.getElementById('login-error');
-            
-            if (input === SECRET_KEY) {
+            if (document.getElementById('pwd-input').value === SECRET_KEY) {
                 sessionStorage.setItem('bsc_auth', 'true');
-                errorMsg.classList.add('hidden');
+                document.getElementById('login-error').classList.add('hidden');
                 unlockDashboard();
             } else {
-                errorMsg.classList.remove('hidden');
+                document.getElementById('login-error').classList.remove('hidden');
                 document.getElementById('pwd-input').value = '';
             }
         }
 
         function unlockDashboard() {
             document.getElementById('login-screen').style.display = 'none';
-            const app = document.getElementById('app-content');
-            app.classList.remove('hidden');
-            setTimeout(() => { app.classList.remove('opacity-0'); }, 50);
-            renderTable();
-            initChart();
+            document.getElementById('app-content').classList.remove('hidden');
+            setTimeout(() => document.getElementById('app-content').classList.remove('opacity-0'), 50);
+            inicializarBancoDeDados();
         }
 
-        function logout() {
-            sessionStorage.removeItem('bsc_auth');
-            window.location.reload();
-        }
-
+        function logout() { sessionStorage.removeItem('bsc_auth'); window.location.reload(); }
         window.onload = checkAuthStatus;
 
-        // 2. BANCO DE DADOS (Atualizado com Equipe de Limpeza e Novo DAS Fev)
-        const database = [
+        // ==========================================
+        // 2. BANCO DE DADOS LOCAL (LocalStorage)
+        // ==========================================
+        let database = [];
+        let chartInstance = null;
+
+        const defaultData = [
             // FEV
-            { mes: '02/2026', favorecido: 'Iago Manguary', categoria: 'Honorários Sócios', valor: 1800.00, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
-            { mes: '02/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
-            { mes: '02/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
-            { mes: '02/2026', favorecido: 'Equipe Limpeza (Seg/Qui)', categoria: 'Serviços Terceirizados', valor: 800.00, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
-            { mes: '02/2026', favorecido: 'BRK Saneamento', categoria: 'Água e Esgoto', valor: 208.45, vencimento: '19/02/2026', pagamento: '12/02/2026', status: 'Pago' },
-            { mes: '02/2026', favorecido: 'Mastercont Contadores', categoria: 'Contabilidade', valor: 370.00, vencimento: '10/02/2026', pagamento: '10/02/2026', status: 'Pago' },
-            { mes: '02/2026', favorecido: 'Pronto Fibra Ltda', categoria: 'Internet', valor: 122.77, vencimento: '25/02/2026', pagamento: '09/03/2026', status: 'Pago' },
-            { mes: '02/2026', favorecido: 'Energisa', categoria: 'Energia Elétrica', valor: 313.73, vencimento: '26/02/2026', pagamento: '25/02/2026', status: 'Pago' },
+            { id: 1, tipo: 'Despesa', mes: '02/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, vencimento: '05/02/2026', status: 'Pago' },
+            { id: 2, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, vencimento: '05/02/2026', status: 'Pago' },
+            { id: 3, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, vencimento: '05/02/2026', status: 'Pago' },
+            { id: 4, tipo: 'Despesa', mes: '02/2026', favorecido: 'Limpeza (Seg/Qui)', categoria: 'Serviços', valor: 800.00, vencimento: '05/02/2026', status: 'Pago' },
+            { id: 5, tipo: 'Despesa', mes: '02/2026', favorecido: 'Aluguel (Sala 603)', categoria: 'Infraestrutura', valor: 2500.00, vencimento: '23/02/2026', status: 'Pago' },
+            { id: 6, tipo: 'Despesa', mes: '02/2026', favorecido: 'Mastercont', categoria: 'Contabilidade', valor: 370.00, vencimento: '10/02/2026', status: 'Pago' },
+            { id: 7, tipo: 'Despesa', mes: '02/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 313.73, vencimento: '26/02/2026', status: 'Pago' },
+            { id: 8, tipo: 'Despesa', mes: '02/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 208.45, vencimento: '19/02/2026', status: 'Pago' },
+            { id: 9, tipo: 'Despesa', mes: '02/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 122.77, vencimento: '25/02/2026', status: 'Pago' },
 
-            // MARÇO
-            { mes: '03/2026', favorecido: 'Iago Manguary', categoria: 'Honorários Sócios', valor: 1800.00, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
-            { mes: '03/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
-            { mes: '03/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
-            { mes: '03/2026', favorecido: 'Equipe Limpeza (Seg/Qui)', categoria: 'Serviços Terceirizados', valor: 800.00, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
-            { mes: '03/2026', favorecido: 'Mastercont Contadores', categoria: 'Contabilidade', valor: 370.00, vencimento: '10/03/2026', pagamento: '20/03/2026', status: 'Pago' },
-            { mes: '03/2026', favorecido: 'BRK Saneamento', categoria: 'Água e Esgoto', valor: 232.20, vencimento: '19/03/2026', pagamento: '-', status: 'Atrasado' },
-            { mes: '03/2026', favorecido: 'Pronto Fibra Ltda', categoria: 'Internet', valor: 119.90, vencimento: '25/03/2026', pagamento: '09/03/2026', status: 'Pago' },
-            { mes: '03/2026', favorecido: 'Energisa', categoria: 'Energia Elétrica', valor: 258.29, vencimento: '26/03/2026', pagamento: '-', status: 'Pendente' },
-            { mes: '03/2026', favorecido: 'Receita Federal (DAS Apur. Fev/26)', categoria: 'Impostos', valor: 549.01, vencimento: '20/03/2026', pagamento: '-', status: 'Atrasado' },
-            { mes: '03/2026', favorecido: 'Receita Federal (DAS Parcela 7/17)', categoria: 'Impostos', valor: 341.57, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' },
-            { mes: '03/2026', favorecido: 'Receita Federal (DAS Parcela 8/17)', categoria: 'Impostos', valor: 341.57, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' },
+            // MARÇO (Atual)
+            { id: 10, tipo: 'Despesa', mes: '03/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, vencimento: '05/03/2026', status: 'Pago' },
+            { id: 11, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, vencimento: '05/03/2026', status: 'Pago' },
+            { id: 12, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, vencimento: '05/03/2026', status: 'Pago' },
+            { id: 13, tipo: 'Despesa', mes: '03/2026', favorecido: 'Limpeza (Seg/Qui)', categoria: 'Serviços', valor: 800.00, vencimento: '05/03/2026', status: 'Pago' },
+            { id: 14, tipo: 'Despesa', mes: '03/2026', favorecido: 'Aluguel (Sala 603)', categoria: 'Infraestrutura', valor: 2500.00, vencimento: '23/03/2026', status: 'Pendente' },
+            { id: 15, tipo: 'Despesa', mes: '03/2026', favorecido: 'Mastercont', categoria: 'Contabilidade', valor: 370.00, vencimento: '10/03/2026', status: 'Pago' },
+            { id: 16, tipo: 'Despesa', mes: '03/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 258.29, vencimento: '26/03/2026', status: 'Pendente' },
+            { id: 17, tipo: 'Despesa', mes: '03/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 232.20, vencimento: '19/03/2026', status: 'Atrasado' },
+            { id: 18, tipo: 'Despesa', mes: '03/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, vencimento: '25/03/2026', status: 'Pago' },
+            { id: 19, tipo: 'Despesa', mes: '03/2026', favorecido: 'DAS (Apur. Fev)', categoria: 'Impostos', valor: 549.01, vencimento: '20/03/2026', status: 'Atrasado' },
+            { id: 20, tipo: 'Despesa', mes: '03/2026', favorecido: 'DAS (Parc. 7/17)', categoria: 'Impostos', valor: 341.57, vencimento: '31/03/2026', status: 'Pendente' },
+            { id: 21, tipo: 'Despesa', mes: '03/2026', favorecido: 'DAS (Parc. 8/17)', categoria: 'Impostos', valor: 341.57, vencimento: '31/03/2026', status: 'Pendente' },
 
-            // ABRIL (PROJEÇÃO)
-            { mes: '04/2026', favorecido: 'Iago Manguary', categoria: 'Honorários Sócios', valor: 1800.00, vencimento: '05/04/2026', pagamento: '-', status: 'Pendente' },
-            { mes: '04/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/04/2026', pagamento: '-', status: 'Pendente' },
-            { mes: '04/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/04/2026', pagamento: '-', status: 'Pendente' },
-            { mes: '04/2026', favorecido: 'Equipe Limpeza (Seg/Qui)', categoria: 'Serviços Terceirizados', valor: 800.00, vencimento: '05/04/2026', pagamento: '-', status: 'Pendente' },
-            { mes: '04/2026', favorecido: 'Mastercont Contadores', categoria: 'Contabilidade', valor: 370.00, vencimento: '10/04/2026', pagamento: '-', status: 'Pendente' },
-            { mes: '04/2026', favorecido: 'BRK Saneamento', categoria: 'Água e Esgoto', valor: 220.00, vencimento: '19/04/2026', pagamento: '-', status: 'Pendente' }, 
-            { mes: '04/2026', favorecido: 'Pronto Fibra Ltda', categoria: 'Internet', valor: 119.90, vencimento: '25/04/2026', pagamento: '-', status: 'Pendente' },
-            { mes: '04/2026', favorecido: 'Energisa', categoria: 'Energia Elétrica', valor: 260.00, vencimento: '26/04/2026', pagamento: '-', status: 'Pendente' },
-            { mes: '04/2026', favorecido: 'Receita Federal (DAS Parcela 9/17)', categoria: 'Impostos', valor: 341.57, vencimento: '30/04/2026', pagamento: '-', status: 'Pendente' }
+            // ABRIL (Projeção)
+            { id: 22, tipo: 'Despesa', mes: '04/2026', favorecido: 'Aluguel (Sala 603)', categoria: 'Infraestrutura', valor: 2500.00, vencimento: '23/04/2026', status: 'Pendente' }
         ];
 
-        // 3. LÓGICA DE INTERFACE
-        const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        function inicializarBancoDeDados() {
+            const dbSalvo = localStorage.getItem('bsc_db');
+            if (dbSalvo) {
+                database = JSON.parse(dbSalvo);
+            } else {
+                database = defaultData; // Carrega os dados fixos na primeira vez
+                localStorage.setItem('bsc_db', JSON.stringify(database));
+            }
+            calcularDashboard();
+            renderTable();
+        }
 
-        const getStatusBadge = (status) => {
-            if(status === 'Pago') return `<span class="px-3 py-1 rounded-full text-xs font-bold status-pago">✔ PAGO</span>`;
-            if(status === 'Pendente') return `<span class="px-3 py-1 rounded-full text-xs font-bold status-pendente">⏱ PENDENTE</span>`;
-            if(status === 'Atrasado') return `<span class="px-3 py-1 rounded-full text-xs font-bold status-atrasado">⚠ ATRASADO</span>`;
-        };
+        // ==========================================
+        // 3. LÓGICA DE INSERÇÃO E EXCLUSÃO
+        // ==========================================
+        function abrirModal() { document.getElementById('modal-lancamento').classList.remove('hidden'); }
+        function fecharModal() { document.getElementById('modal-lancamento').classList.add('hidden'); document.getElementById('form-lancamento').reset(); }
+
+        function salvarLancamento(e) {
+            e.preventDefault();
+            
+            // Extrai o mês/ano da data (Ex: "2026-03-25" -> "03/2026")
+            const dateStr = document.getElementById('inp-vencimento').value;
+            const partes = dateStr.split('-');
+            const mesRef = `${partes[1]}/${partes[0]}`;
+            const dataVenc = `${partes[2]}/${partes[1]}/${partes[0]}`;
+
+            const novoItem = {
+                id: Date.now(), // ID único
+                tipo: document.getElementById('inp-tipo').value,
+                mes: mesRef,
+                favorecido: document.getElementById('inp-descricao').value,
+                categoria: document.getElementById('inp-categoria').value,
+                valor: parseFloat(document.getElementById('inp-valor').value),
+                vencimento: dataVenc,
+                status: document.getElementById('inp-status').value
+            };
+
+            database.push(novoItem);
+            localStorage.setItem('bsc_db', JSON.stringify(database)); // Salva no navegador
+            
+            fecharModal();
+            calcularDashboard();
+            renderTable();
+        }
+
+        function excluirLancamento(id) {
+            if(confirm('Tem certeza que deseja excluir este lançamento?')) {
+                database = database.filter(item => item.id !== id);
+                localStorage.setItem('bsc_db', JSON.stringify(database));
+                calcularDashboard();
+                renderTable();
+            }
+        }
+
+        // ==========================================
+        // 4. LÓGICA DE INTERFACE E CÁLCULOS
+        // ==========================================
+        const formatCurrency = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
         function changeView(view) {
             document.getElementById('view-dashboard').style.display = view === 'dashboard' ? 'block' : 'none';
             document.getElementById('view-extrato').style.display = view === 'extrato' ? 'block' : 'none';
-            
             document.getElementById('btn-dashboard').className = view === 'dashboard' ? 'tab-btn tab-active pb-1 px-2' : 'tab-btn pb-1 px-2 text-gray-500 hover:text-[#004d2c]';
             document.getElementById('btn-extrato').className = view === 'extrato' ? 'tab-btn tab-active pb-1 px-2' : 'tab-btn pb-1 px-2 text-gray-500 hover:text-[#004d2c]';
         }
 
+        function calcularDashboard() {
+            const mesSel = document.getElementById('dash-month-filter').value;
+            let totReceitas = 0, totDespesas = 0;
+
+            database.forEach(item => {
+                if(item.mes === mesSel) {
+                    if(item.tipo === 'Receita') totReceitas += item.valor;
+                    if(item.tipo === 'Despesa') totDespesas += item.valor;
+                }
+            });
+
+            document.getElementById('kpi-receitas').innerText = formatCurrency(totReceitas);
+            document.getElementById('kpi-despesas').innerText = formatCurrency(totDespesas);
+            document.getElementById('kpi-lucro').innerText = formatCurrency(totReceitas - totDespesas);
+            
+            // Cor do lucro (Vermelho se negativo, Verde se positivo)
+            document.getElementById('kpi-lucro').className = (totReceitas - totDespesas) < 0 ? "text-3xl font-black text-red-600" : "text-3xl font-black text-[#004d2c]";
+
+            atualizarGrafico();
+        }
+
         function renderTable() {
-            const selectedMonth = document.getElementById('month-filter').value;
+            const mesSel = document.getElementById('month-filter').value;
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
 
-            let totalMes = 0, totalPago = 0, totalPendente = 0, totalAtrasado = 0;
+            let filteredData = mesSel === 'Todos' ? database : database.filter(item => item.mes === mesSel);
 
-            const filteredData = database.filter(item => item.mes === selectedMonth);
+            // Ordena por data (mais recente primeiro)
+            filteredData.sort((a, b) => b.id - a.id);
 
             filteredData.forEach(item => {
-                totalMes += item.valor;
-                if(item.status === 'Pago') totalPago += item.valor;
-                if(item.status === 'Pendente') totalPendente += item.valor;
-                if(item.status === 'Atrasado') totalAtrasado += item.valor;
+                const corTipo = item.tipo === 'Receita' ? 'tipo-receita' : 'tipo-despesa';
+                const sinal = item.tipo === 'Receita' ? '+' : '-';
+                
+                let badgeStatus = '';
+                if(item.status === 'Pago') badgeStatus = `<span class="px-2 py-1 rounded-md text-xs font-bold status-pago">Baixado</span>`;
+                if(item.status === 'Pendente') badgeStatus = `<span class="px-2 py-1 rounded-md text-xs font-bold status-pendente">A Vencer</span>`;
+                if(item.status === 'Atrasado') badgeStatus = `<span class="px-2 py-1 rounded-md text-xs font-bold status-atrasado">Atrasado</span>`;
 
                 const row = `
-                    <tr class="hover:bg-gray-50 transition border-b border-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap">${getStatusBadge(item.status)}</td>
+                    <tr class="hover:bg-gray-50 border-b border-gray-100 transition">
+                        <td class="px-6 py-4 ${corTipo} uppercase text-xs tracking-wider">${item.tipo}</td>
                         <td class="px-6 py-4 font-mono text-sm">${item.vencimento}</td>
-                        <td class="px-6 py-4 font-mono text-sm ${item.pagamento === '-' ? 'text-gray-300' : 'text-gray-900'}">${item.pagamento}</td>
                         <td class="px-6 py-4 font-bold text-gray-900">${item.favorecido}</td>
-                        <td class="px-6 py-4">${item.categoria}</td>
-                        <td class="px-6 py-4 text-right font-mono font-bold text-gray-900">${formatCurrency(item.valor)}</td>
+                        <td class="px-6 py-4 text-xs bg-gray-50 rounded">${item.categoria}</td>
+                        <td class="px-6 py-4 text-right font-mono font-bold ${corTipo}">${sinal} ${formatCurrency(item.valor)}</td>
+                        <td class="px-6 py-4 text-center">${badgeStatus}</td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="excluirLancamento(${item.id})" class="text-red-400 hover:text-red-600 font-bold text-xs underline">Apagar</button>
+                        </td>
                     </tr>
                 `;
                 tbody.insertAdjacentHTML('beforeend', row);
             });
-
-            document.getElementById('table-total').innerText = formatCurrency(totalMes);
-
-            if(selectedMonth === '03/2026') {
-                document.getElementById('kpi-total').innerText = formatCurrency(totalMes);
-                document.getElementById('kpi-pago').innerText = formatCurrency(totalPago);
-                document.getElementById('kpi-pendente').innerText = formatCurrency(totalPendente);
-                document.getElementById('kpi-atrasado').innerText = formatCurrency(totalAtrasado);
-            }
         }
 
-        function initChart() {
+        function atualizarGrafico() {
             if (chartInstance) chartInstance.destroy();
             
+            // Agrupa dados para os últimos meses
+            const meses = ['02/2026', '03/2026', '04/2026'];
+            let recData = [0,0,0], desData = [0,0,0];
+
+            database.forEach(item => {
+                const idx = meses.indexOf(item.mes);
+                if(idx > -1) {
+                    if(item.tipo === 'Receita') recData[idx] += item.valor;
+                    if(item.tipo === 'Despesa') desData[idx] += item.valor;
+                }
+            });
+
             const ctx = document.getElementById('fluxoChart').getContext('2d');
             chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['Fev/2026', 'Mar/2026 (Atual)', 'Abr/2026 (Proj.)'],
+                    labels: ['Fev/26', 'Mar/26', 'Abr/26'],
                     datasets: [
-                        { label: 'Honorários Equipe', data: [3800, 3800, 3800], backgroundColor: '#004d2c', borderRadius: 4 },
-                        { label: 'Fornec. & Utilidades', data: [1814.95, 1780.39, 1769.90], backgroundColor: '#c5a36b', borderRadius: 4 },
-                        { label: 'Impostos (DAS)', data: [0, 1232.15, 341.57], backgroundColor: '#d13232', borderRadius: 4 }
+                        { label: 'Receitas', data: recData, backgroundColor: '#15803d', borderRadius: 4 },
+                        { label: 'Despesas', data: desData, backgroundColor: '#b91c1c', borderRadius: 4 }
                     ]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { 
-                        x: { stacked: true, grid: { display: false } }, 
-                        y: { stacked: true, beginAtZero: true, border: { dash: [4, 4] } } 
-                    },
-                    plugins: { legend: { position: 'top', align: 'end' } }
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } }
                 }
             });
         }
