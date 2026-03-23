@@ -180,12 +180,13 @@
 
         window.onload = checkAuthStatus;
 
-        // 2. BANCO DE DADOS (Atualizado com Impostos e Contabilidade nova)
+        // 2. BANCO DE DADOS (Atualizado com Equipe de Limpeza e Novo DAS Fev)
         const database = [
             // FEV
             { mes: '02/2026', favorecido: 'Iago Manguary', categoria: 'Honorários Sócios', valor: 1800.00, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
             { mes: '02/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
             { mes: '02/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
+            { mes: '02/2026', favorecido: 'Equipe Limpeza (Seg/Qui)', categoria: 'Serviços Terceirizados', valor: 800.00, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
             { mes: '02/2026', favorecido: 'BRK Saneamento', categoria: 'Água e Esgoto', valor: 208.45, vencimento: '19/02/2026', pagamento: '12/02/2026', status: 'Pago' },
             { mes: '02/2026', favorecido: 'Mastercont Contadores', categoria: 'Contabilidade', valor: 370.00, vencimento: '10/02/2026', pagamento: '10/02/2026', status: 'Pago' },
             { mes: '02/2026', favorecido: 'Pronto Fibra Ltda', categoria: 'Internet', valor: 122.77, vencimento: '25/02/2026', pagamento: '09/03/2026', status: 'Pago' },
@@ -195,22 +196,25 @@
             { mes: '03/2026', favorecido: 'Iago Manguary', categoria: 'Honorários Sócios', valor: 1800.00, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
             { mes: '03/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
             { mes: '03/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
+            { mes: '03/2026', favorecido: 'Equipe Limpeza (Seg/Qui)', categoria: 'Serviços Terceirizados', valor: 800.00, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
             { mes: '03/2026', favorecido: 'Mastercont Contadores', categoria: 'Contabilidade', valor: 370.00, vencimento: '10/03/2026', pagamento: '20/03/2026', status: 'Pago' },
             { mes: '03/2026', favorecido: 'BRK Saneamento', categoria: 'Água e Esgoto', valor: 232.20, vencimento: '19/03/2026', pagamento: '-', status: 'Atrasado' },
             { mes: '03/2026', favorecido: 'Pronto Fibra Ltda', categoria: 'Internet', valor: 119.90, vencimento: '25/03/2026', pagamento: '09/03/2026', status: 'Pago' },
             { mes: '03/2026', favorecido: 'Energisa', categoria: 'Energia Elétrica', valor: 258.29, vencimento: '26/03/2026', pagamento: '-', status: 'Pendente' },
-            { mes: '03/2026', favorecido: 'Receita Federal (DAS 7/17)', categoria: 'Impostos', valor: 341.57, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' },
-            { mes: '03/2026', favorecido: 'Receita Federal (DAS 8/17)', categoria: 'Impostos', valor: 341.57, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' },
+            { mes: '03/2026', favorecido: 'Receita Federal (DAS Apur. Fev/26)', categoria: 'Impostos', valor: 549.01, vencimento: '20/03/2026', pagamento: '-', status: 'Atrasado' },
+            { mes: '03/2026', favorecido: 'Receita Federal (DAS Parcela 7/17)', categoria: 'Impostos', valor: 341.57, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' },
+            { mes: '03/2026', favorecido: 'Receita Federal (DAS Parcela 8/17)', categoria: 'Impostos', valor: 341.57, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' },
 
             // ABRIL (PROJEÇÃO)
             { mes: '04/2026', favorecido: 'Iago Manguary', categoria: 'Honorários Sócios', valor: 1800.00, vencimento: '05/04/2026', pagamento: '-', status: 'Pendente' },
             { mes: '04/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/04/2026', pagamento: '-', status: 'Pendente' },
             { mes: '04/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/04/2026', pagamento: '-', status: 'Pendente' },
+            { mes: '04/2026', favorecido: 'Equipe Limpeza (Seg/Qui)', categoria: 'Serviços Terceirizados', valor: 800.00, vencimento: '05/04/2026', pagamento: '-', status: 'Pendente' },
             { mes: '04/2026', favorecido: 'Mastercont Contadores', categoria: 'Contabilidade', valor: 370.00, vencimento: '10/04/2026', pagamento: '-', status: 'Pendente' },
             { mes: '04/2026', favorecido: 'BRK Saneamento', categoria: 'Água e Esgoto', valor: 220.00, vencimento: '19/04/2026', pagamento: '-', status: 'Pendente' }, 
             { mes: '04/2026', favorecido: 'Pronto Fibra Ltda', categoria: 'Internet', valor: 119.90, vencimento: '25/04/2026', pagamento: '-', status: 'Pendente' },
             { mes: '04/2026', favorecido: 'Energisa', categoria: 'Energia Elétrica', valor: 260.00, vencimento: '26/04/2026', pagamento: '-', status: 'Pendente' },
-            { mes: '04/2026', favorecido: 'Receita Federal (DAS 9/17)', categoria: 'Impostos', valor: 341.57, vencimento: '30/04/2026', pagamento: '-', status: 'Pendente' }
+            { mes: '04/2026', favorecido: 'Receita Federal (DAS Parcela 9/17)', categoria: 'Impostos', valor: 341.57, vencimento: '30/04/2026', pagamento: '-', status: 'Pendente' }
         ];
 
         // 3. LÓGICA DE INTERFACE
@@ -278,8 +282,8 @@
                     labels: ['Fev/2026', 'Mar/2026 (Atual)', 'Abr/2026 (Proj.)'],
                     datasets: [
                         { label: 'Honorários Equipe', data: [3800, 3800, 3800], backgroundColor: '#004d2c', borderRadius: 4 },
-                        { label: 'Fornec. & Utilidades', data: [1014.95, 980.39, 969.90], backgroundColor: '#c5a36b', borderRadius: 4 },
-                        { label: 'Impostos (DAS)', data: [0, 683.14, 341.57], backgroundColor: '#d13232', borderRadius: 4 } // Nova barra de impostos
+                        { label: 'Fornec. & Utilidades', data: [1814.95, 1780.39, 1769.90], backgroundColor: '#c5a36b', borderRadius: 4 },
+                        { label: 'Impostos (DAS)', data: [0, 1232.15, 341.57], backgroundColor: '#d13232', borderRadius: 4 }
                     ]
                 },
                 options: {
