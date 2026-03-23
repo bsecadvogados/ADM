@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Gerencial | BSC Advogados</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --bsc-verde: #004d2c; --bsc-dourado: #c5a36b; }
+        .bg-bsc-verde { background-color: var(--bsc-verde); }
+        .text-bsc-verde { color: var(--bsc-verde); }
+        .border-bsc-dourado { border-color: var(--bsc-dourado); }
+        .tab-active { border-bottom: 4px solid var(--bsc-verde); color: var(--bsc-verde); font-weight: bold; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <header class="bg-white shadow-sm border-b-4 border-bsc-verde p-6">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center gap-4">
+                <img src="logo-bsc.png" alt="Logo BSC" class="h-16">
+                <div>
+                    <h1 class="text-xl font-bold text-bsc-verde uppercase">Barcellos, Sakumoto & Carvalho</h1>
+                    <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Direito Agrário | Gestão Financeira</p>
+                </div>
+            </div>
+            <div class="flex gap-4 mt-4 md:mt-0">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="px-6 py-2 tab-active transition-all">Dashboard</button>
+                <button onclick="switchTab('dados')" id="btn-dados" class="px-6 py-2 text-gray-400 hover:text-bsc-verde transition-all">Dados Mensais</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto py-8 px-4">
+        
+        <section id="tab-dashboard" class="block animate-fade-in">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 text-center">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-bsc-verde">
+                    <p class="text-gray-400 text-xs font-bold uppercase mb-2">Folha de Honorários</p>
+                    <p class="text-3xl font-black text-bsc-verde">R$ 3.800,00</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-bsc-dourado">
+                    <p class="text-gray-400 text-xs font-bold uppercase mb-2">Custos Operacionais</p>
+                    <p class="text-3xl font-black text-gray-700">R$ 980,39</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-red-600">
+                    <p class="text-gray-400 text-xs font-bold uppercase mb-2">Total de Saídas</p>
+                    <p class="text-3xl font-black text-red-600">R$ 4.780,39</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-3xl shadow-sm h-[450px]">
+                <h3 class="font-bold text-bsc-verde mb-6 uppercase tracking-wider">Evolução de Gastos Acumulados</h3>
+                <canvas id="mainChart"></canvas>
+            </div>
+        </section>
+
+        <section id="tab-dados" class="hidden animate-fade-in">
+            <div class="bg-white rounded-3xl shadow-sm overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 border-b border-gray-100">
+                        <tr>
+                            <th class="p-5 text-bsc-verde font-bold uppercase text-xs">Mês/Referência</th>
+                            <th class="p-5 text-bsc-verde font-bold uppercase text-xs">Honorários Equipe</th>
+                            <th class="p-5 text-bsc-verde font-bold uppercase text-xs">Utilidades (Água/Luz/Net)</th>
+                            <th class="p-5 text-bsc-verde font-bold uppercase text-xs">Contabilidade</th>
+                            <th class="p-5 text-bsc-verde font-bold uppercase text-xs">Total Despesa</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-5 font-bold">Março/2026</td>
+                            <td class="p-5">R$ 3.800,00</td>
+                            <td class="p-5 font-mono text-sm">R$ 610,39</td>
+                            <td class="p-5 font-mono text-sm">R$ 370,00</td>
+                            <td class="p-5 font-bold text-red-600 italic">R$ 4.780,39</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-5 font-bold">Fevereiro/2026</td>
+                            <td class="p-5 text-gray-400">R$ 3.800,00</td>
+                            <td class="p-5 font-mono text-sm text-gray-400">R$ 644,95</td>
+                            <td class="p-5 font-mono text-sm text-gray-400">R$ 370,00</td>
+                            <td class="p-5 font-bold text-gray-400">R$ 4.814,95</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Lógica de Alternância de Abas
+        function switchTab(tab) {
+            const dashboard = document.getElementById('tab-dashboard');
+            const dados = document.getElementById('tab-dados');
+            const btnDash = document.getElementById('btn-dashboard');
+            const btnDados = document.getElementById('btn-dados');
+
+            if (tab === 'dashboard') {
+                dashboard.classList.remove('hidden');
+                dados.classList.add('hidden');
+                btnDash.classList.add('tab-active');
+                btnDados.classList.remove('tab-active');
+            } else {
+                dashboard.classList.add('hidden');
+                dados.classList.remove('block');
+                dados.classList.remove('hidden');
+                btnDash.classList.remove('tab-active');
+                btnDados.classList.add('tab-active');
+            }
+        }
+
+        // Configuração do Gráfico
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Jan/26', 'Fev/26', 'Mar/26'],
+                datasets: [
+                    { label: 'Honorários', data: [3800, 3800, 3800], backgroundColor: '#004d2c', borderRadius: 10 },
+                    { label: 'Operacional', data: [427.63, 644.95, 610.39], backgroundColor: '#c5a36b', borderRadius: 10 },
+                    { label: 'Contabilidade', data: [370, 370, 370], backgroundColor: '#1a1a1a', borderRadius: 10 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { x: { stacked: true }, y: { stacked: true } },
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    </script>
+</body>
+</html>
