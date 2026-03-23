@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BSC Advogados | Sistema de Gestão Financeira</title>
+    <title>BSC Advogados | Portal Financeiro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bsc-verde: #004d2c;
-            --bsc-verde-claro: #006b3d;
             --bsc-dourado: #c5a36b;
             --bsc-bg: #f3f4f6;
         }
@@ -19,139 +18,202 @@
         .status-pago { background-color: #dcfce7; color: #166534; }
         .status-pendente { background-color: #fef08a; color: #854d0e; }
         .status-atrasado { background-color: #fee2e2; color: #991b1b; }
+        .login-bg { background: linear-gradient(135deg, #004d2c 0%, #002a18 100%); }
     </style>
 </head>
 <body class="text-gray-800 antialiased">
 
-    <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
-        <div class="container mx-auto px-6 py-4 flex flex-col lg:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-4">
-                <img src="logo-bsc.png" alt="Logo BSC" class="h-14">
+    <div id="login-screen" class="min-h-screen login-bg flex flex-col items-center justify-center px-4 fixed inset-0 z-[100] transition-opacity duration-500">
+        <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md text-center transform transition-all">
+            <img src="logo-bsc.png" alt="Logo BSC" class="h-24 mx-auto mb-6">
+            <h2 class="text-2xl font-black text-[#004d2c] uppercase tracking-wider mb-1">Acesso Restrito</h2>
+            <p class="text-sm font-semibold text-[#c5a36b] tracking-widest uppercase mb-8">Controladoria Financeira</p>
+            
+            <div class="space-y-4">
                 <div>
-                    <h1 class="text-xl font-bold text-[#004d2c] tracking-tight">Barcellos, Sakumoto & Carvalho</h1>
-                    <p class="text-xs font-semibold text-[#c5a36b] uppercase tracking-widest">Controladoria Financeira</p>
+                    <input type="password" id="pwd-input" placeholder="Digite a senha de acesso" 
+                           class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#004d2c] focus:ring-0 outline-none transition text-center text-lg font-mono"
+                           onkeypress="handleEnter(event)">
+                    <p id="login-error" class="text-red-500 text-xs font-bold mt-2 hidden">Senha incorreta. Tente novamente.</p>
                 </div>
-            </div>
-            <div class="flex items-center gap-6 text-sm font-medium">
-                <span class="text-gray-500 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    Hoje: 23 de Março de 2026
-                </span>
-                <div class="flex gap-2">
-                    <button onclick="changeView('dashboard')" id="btn-dashboard" class="tab-btn tab-active pb-1 px-2">Dashboard</button>
-                    <button onclick="changeView('extrato')" id="btn-extrato" class="tab-btn pb-1 px-2 text-gray-500 hover:text-[#004d2c]">Extrato Detalhado</button>
-                </div>
+                <button onclick="authenticate()" class="w-full bg-[#004d2c] hover:bg-[#003820] text-white font-bold py-3 px-4 rounded-xl transition shadow-lg uppercase tracking-wide">
+                    Acessar Dashboard
+                </button>
             </div>
         </div>
-    </nav>
+    </div>
 
-    <main class="container mx-auto py-8 px-6">
-        
-        <div id="view-dashboard" class="block space-y-8 animate-fade-in">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-[#004d2c]">
-                    <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Despesa Total (Mar/26)</h3>
-                    <p class="text-3xl font-black text-[#004d2c]" id="kpi-total">R$ 0,00</p>
+    <div id="app-content" class="hidden opacity-0 transition-opacity duration-700">
+        <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+            <div class="container mx-auto px-6 py-4 flex flex-col lg:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-4">
+                    <img src="logo-bsc.png" alt="Logo BSC" class="h-14">
+                    <div>
+                        <h1 class="text-xl font-bold text-[#004d2c] tracking-tight">Barcellos, Sakumoto & Carvalho</h1>
+                        <p class="text-xs font-semibold text-[#c5a36b] uppercase tracking-widest">Controladoria Financeira</p>
+                    </div>
                 </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-green-500">
-                    <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Total Pago</h3>
-                    <p class="text-3xl font-black text-green-600" id="kpi-pago">R$ 0,00</p>
+                <div class="flex items-center gap-6 text-sm font-medium">
+                    <div class="flex gap-2">
+                        <button onclick="changeView('dashboard')" id="btn-dashboard" class="tab-btn tab-active pb-1 px-2">Dashboard</button>
+                        <button onclick="changeView('extrato')" id="btn-extrato" class="tab-btn pb-1 px-2 text-gray-500 hover:text-[#004d2c]">Livro Razão</button>
+                    </div>
+                    <button onclick="logout()" class="ml-4 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg transition font-bold">Sair</button>
                 </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-orange-400">
-                    <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">A Vencer</h3>
-                    <p class="text-3xl font-black text-orange-500" id="kpi-pendente">R$ 0,00</p>
+            </div>
+        </nav>
+
+        <main class="container mx-auto py-8 px-6">
+            
+            <div id="view-dashboard" class="block space-y-8 animate-fade-in">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-[#004d2c]">
+                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Despesa Total (Mar/26)</h3>
+                        <p class="text-3xl font-black text-[#004d2c]" id="kpi-total">R$ 0,00</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-green-500">
+                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Total Pago</h3>
+                        <p class="text-3xl font-black text-green-600" id="kpi-pago">R$ 0,00</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-orange-400">
+                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">A Vencer</h3>
+                        <p class="text-3xl font-black text-orange-500" id="kpi-pendente">R$ 0,00</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-red-600">
+                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Em Atraso</h3>
+                        <p class="text-3xl font-black text-red-600" id="kpi-atrasado">R$ 0,00</p>
+                    </div>
                 </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-red-600">
-                    <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Em Atraso</h3>
-                    <p class="text-3xl font-black text-red-600" id="kpi-atrasado">R$ 0,00</p>
+
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-lg font-bold text-[#004d2c]">Projeção de Saídas (Fev - Abr)</h2>
+                        <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full font-bold">Visão Macro</span>
+                    </div>
+                    <div class="h-[350px]">
+                        <canvas id="fluxoChart"></canvas>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-lg font-bold text-[#004d2c]">Projeção de Saídas (Fev - Abr)</h2>
-                    <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full font-bold">Visão Macro</span>
+            <div id="view-extrato" class="hidden space-y-6 animate-fade-in">
+                <div class="bg-white p-6 rounded-2xl shadow-sm flex justify-between items-center border border-gray-100">
+                    <h2 class="text-lg font-bold text-[#004d2c]">Lançamentos de Despesas</h2>
+                    <div class="flex items-center gap-3">
+                        <label class="text-sm font-semibold text-gray-500">Competência:</label>
+                        <select id="month-filter" onchange="renderTable()" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#004d2c] focus:border-[#004d2c] block w-48 p-2.5 outline-none font-bold">
+                            <option value="02/2026">Fevereiro / 2026</option>
+                            <option value="03/2026" selected>Março / 2026 (Atual)</option>
+                            <option value="04/2026">Abril / 2026 (Projeção)</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="h-[350px]">
-                    <canvas id="fluxoChart"></canvas>
+
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-600">
+                            <thead class="bg-gray-50 text-gray-700 uppercase font-bold text-xs border-b">
+                                <tr>
+                                    <th class="px-6 py-4">Status</th>
+                                    <th class="px-6 py-4">Vencimento</th>
+                                    <th class="px-6 py-4">Pagamento</th>
+                                    <th class="px-6 py-4">Favorecido / Empresa</th>
+                                    <th class="px-6 py-4">Categoria</th>
+                                    <th class="px-6 py-4 text-right">Valor (R$)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body" class="divide-y divide-gray-100">
+                                </tbody>
+                            <tfoot class="bg-gray-50 font-bold text-gray-900">
+                                <tr>
+                                    <td colspan="5" class="px-6 py-4 text-right uppercase text-xs">Total do Mês:</td>
+                                    <td class="px-6 py-4 text-right text-[#004d2c] text-lg" id="table-total">R$ 0,00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <div id="view-extrato" class="hidden space-y-6 animate-fade-in">
-            <div class="bg-white p-6 rounded-2xl shadow-sm flex justify-between items-center border border-gray-100">
-                <h2 class="text-lg font-bold text-[#004d2c]">Livro Razão Analítico</h2>
-                <div class="flex items-center gap-3">
-                    <label class="text-sm font-semibold text-gray-500">Competência:</label>
-                    <select id="month-filter" onchange="renderTable()" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#004d2c] focus:border-[#004d2c] block w-48 p-2.5 outline-none font-bold">
-                        <option value="02/2026">Fevereiro / 2026</option>
-                        <option value="03/2026" selected>Março / 2026 (Atual)</option>
-                        <option value="04/2026">Abril / 2026 (Projeção)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-gray-600">
-                        <thead class="bg-gray-50 text-gray-700 uppercase font-bold text-xs border-b">
-                            <tr>
-                                <th class="px-6 py-4">Status</th>
-                                <th class="px-6 py-4">Vencimento</th>
-                                <th class="px-6 py-4">Pagamento</th>
-                                <th class="px-6 py-4">Favorecido / Empresa</th>
-                                <th class="px-6 py-4">Categoria</th>
-                                <th class="px-6 py-4 text-right">Valor (R$)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body" class="divide-y divide-gray-100">
-                            </tbody>
-                        <tfoot class="bg-gray-50 font-bold text-gray-900">
-                            <tr>
-                                <td colspan="5" class="px-6 py-4 text-right uppercase text-xs">Total do Mês:</td>
-                                <td class="px-6 py-4 text-right text-[#004d2c] text-lg" id="table-total">R$ 0,00</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-    </main>
+        </main>
+    </div>
 
     <script>
-        // 1. BANCO DE DADOS EM MEMÓRIA (Estrutura Sênior)
-        // Aqui ficam todos os seus dados do passado, presente e projeções do futuro.
+        // 1. SISTEMA DE AUTENTICAÇÃO
+        const SECRET_KEY = "BSCADV";
+        let chartInstance = null;
+
+        function checkAuthStatus() {
+            if (sessionStorage.getItem('bsc_auth') === 'true') unlockDashboard();
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') authenticate();
+        }
+
+        function authenticate() {
+            const input = document.getElementById('pwd-input').value;
+            const errorMsg = document.getElementById('login-error');
+            
+            if (input === SECRET_KEY) {
+                sessionStorage.setItem('bsc_auth', 'true');
+                errorMsg.classList.add('hidden');
+                unlockDashboard();
+            } else {
+                errorMsg.classList.remove('hidden');
+                document.getElementById('pwd-input').value = '';
+            }
+        }
+
+        function unlockDashboard() {
+            document.getElementById('login-screen').style.display = 'none';
+            const app = document.getElementById('app-content');
+            app.classList.remove('hidden');
+            setTimeout(() => { app.classList.remove('opacity-0'); }, 50);
+            renderTable();
+            initChart();
+        }
+
+        function logout() {
+            sessionStorage.removeItem('bsc_auth');
+            window.location.reload();
+        }
+
+        window.onload = checkAuthStatus;
+
+        // 2. BANCO DE DADOS (Atualizado com Impostos e Contabilidade nova)
         const database = [
-            // --- FEVEREIRO 2026 ---
+            // FEV
             { mes: '02/2026', favorecido: 'Iago Manguary', categoria: 'Honorários Sócios', valor: 1800.00, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
             { mes: '02/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
             { mes: '02/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
             { mes: '02/2026', favorecido: 'BRK Saneamento', categoria: 'Água e Esgoto', valor: 208.45, vencimento: '19/02/2026', pagamento: '12/02/2026', status: 'Pago' },
-            { mes: '02/2026', favorecido: 'Mastercont', categoria: 'Contabilidade', valor: 370.00, vencimento: '10/02/2026', pagamento: '10/02/2026', status: 'Pago' },
+            { mes: '02/2026', favorecido: 'Mastercont Contadores', categoria: 'Contabilidade', valor: 370.00, vencimento: '10/02/2026', pagamento: '10/02/2026', status: 'Pago' },
             { mes: '02/2026', favorecido: 'Pronto Fibra Ltda', categoria: 'Internet', valor: 122.77, vencimento: '25/02/2026', pagamento: '09/03/2026', status: 'Pago' },
             { mes: '02/2026', favorecido: 'Energisa', categoria: 'Energia Elétrica', valor: 313.73, vencimento: '26/02/2026', pagamento: '25/02/2026', status: 'Pago' },
 
-            // --- MARÇO 2026 (MÊS ATUAL) ---
+            // MARÇO
             { mes: '03/2026', favorecido: 'Iago Manguary', categoria: 'Honorários Sócios', valor: 1800.00, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
             { mes: '03/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
             { mes: '03/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
-            { mes: '03/2026', favorecido: 'Mastercont', categoria: 'Contabilidade', valor: 370.00, vencimento: '10/03/2026', pagamento: '20/03/2026', status: 'Pago' },
+            { mes: '03/2026', favorecido: 'Mastercont Contadores', categoria: 'Contabilidade', valor: 370.00, vencimento: '10/03/2026', pagamento: '20/03/2026', status: 'Pago' },
             { mes: '03/2026', favorecido: 'BRK Saneamento', categoria: 'Água e Esgoto', valor: 232.20, vencimento: '19/03/2026', pagamento: '-', status: 'Atrasado' },
             { mes: '03/2026', favorecido: 'Pronto Fibra Ltda', categoria: 'Internet', valor: 119.90, vencimento: '25/03/2026', pagamento: '09/03/2026', status: 'Pago' },
             { mes: '03/2026', favorecido: 'Energisa', categoria: 'Energia Elétrica', valor: 258.29, vencimento: '26/03/2026', pagamento: '-', status: 'Pendente' },
+            { mes: '03/2026', favorecido: 'Receita Federal (DAS 7/17)', categoria: 'Impostos', valor: 341.57, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' },
+            { mes: '03/2026', favorecido: 'Receita Federal (DAS 8/17)', categoria: 'Impostos', valor: 341.57, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' },
 
-            // --- ABRIL 2026 (PROJEÇÃO FUTURA) ---
+            // ABRIL (PROJEÇÃO)
             { mes: '04/2026', favorecido: 'Iago Manguary', categoria: 'Honorários Sócios', valor: 1800.00, vencimento: '05/04/2026', pagamento: '-', status: 'Pendente' },
             { mes: '04/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/04/2026', pagamento: '-', status: 'Pendente' },
             { mes: '04/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários Associados', valor: 1000.00, vencimento: '05/04/2026', pagamento: '-', status: 'Pendente' },
-            { mes: '04/2026', favorecido: 'Mastercont', categoria: 'Contabilidade', valor: 370.00, vencimento: '10/04/2026', pagamento: '-', status: 'Pendente' },
-            { mes: '04/2026', favorecido: 'BRK Saneamento', categoria: 'Água e Esgoto', valor: 220.00, vencimento: '19/04/2026', pagamento: '-', status: 'Pendente' }, // Média estimada
+            { mes: '04/2026', favorecido: 'Mastercont Contadores', categoria: 'Contabilidade', valor: 370.00, vencimento: '10/04/2026', pagamento: '-', status: 'Pendente' },
+            { mes: '04/2026', favorecido: 'BRK Saneamento', categoria: 'Água e Esgoto', valor: 220.00, vencimento: '19/04/2026', pagamento: '-', status: 'Pendente' }, 
             { mes: '04/2026', favorecido: 'Pronto Fibra Ltda', categoria: 'Internet', valor: 119.90, vencimento: '25/04/2026', pagamento: '-', status: 'Pendente' },
-            { mes: '04/2026', favorecido: 'Energisa', categoria: 'Energia Elétrica', valor: 260.00, vencimento: '26/04/2026', pagamento: '-', status: 'Pendente' } // Média estimada
+            { mes: '04/2026', favorecido: 'Energisa', categoria: 'Energia Elétrica', valor: 260.00, vencimento: '26/04/2026', pagamento: '-', status: 'Pendente' },
+            { mes: '04/2026', favorecido: 'Receita Federal (DAS 9/17)', categoria: 'Impostos', valor: 341.57, vencimento: '30/04/2026', pagamento: '-', status: 'Pendente' }
         ];
 
-        // 2. FUNÇÕES DE FORMATAÇÃO
+        // 3. LÓGICA DE INTERFACE
         const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
         const getStatusBadge = (status) => {
@@ -160,7 +222,6 @@
             if(status === 'Atrasado') return `<span class="px-3 py-1 rounded-full text-xs font-bold status-atrasado">⚠ ATRASADO</span>`;
         };
 
-        // 3. NAVEGAÇÃO ENTRE ABAS
         function changeView(view) {
             document.getElementById('view-dashboard').style.display = view === 'dashboard' ? 'block' : 'none';
             document.getElementById('view-extrato').style.display = view === 'extrato' ? 'block' : 'none';
@@ -169,7 +230,6 @@
             document.getElementById('btn-extrato').className = view === 'extrato' ? 'tab-btn tab-active pb-1 px-2' : 'tab-btn pb-1 px-2 text-gray-500 hover:text-[#004d2c]';
         }
 
-        // 4. MOTOR DA TABELA E CÁLCULO DE KPIs
         function renderTable() {
             const selectedMonth = document.getElementById('month-filter').value;
             const tbody = document.getElementById('table-body');
@@ -177,7 +237,6 @@
 
             let totalMes = 0, totalPago = 0, totalPendente = 0, totalAtrasado = 0;
 
-            // Filtra os dados pelo mês selecionado
             const filteredData = database.filter(item => item.mes === selectedMonth);
 
             filteredData.forEach(item => {
@@ -199,10 +258,8 @@
                 tbody.insertAdjacentHTML('beforeend', row);
             });
 
-            // Atualiza Rodapé da Tabela
             document.getElementById('table-total').innerText = formatCurrency(totalMes);
 
-            // Se for o mês atual (Março), atualiza os KPIs do Dashboard
             if(selectedMonth === '03/2026') {
                 document.getElementById('kpi-total').innerText = formatCurrency(totalMes);
                 document.getElementById('kpi-pago').innerText = formatCurrency(totalPago);
@@ -211,16 +268,18 @@
             }
         }
 
-        // 5. INICIALIZAÇÃO DO GRÁFICO (Chart.js)
         function initChart() {
+            if (chartInstance) chartInstance.destroy();
+            
             const ctx = document.getElementById('fluxoChart').getContext('2d');
-            new Chart(ctx, {
+            chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: ['Fev/2026', 'Mar/2026 (Atual)', 'Abr/2026 (Proj.)'],
                     datasets: [
                         { label: 'Honorários Equipe', data: [3800, 3800, 3800], backgroundColor: '#004d2c', borderRadius: 4 },
-                        { label: 'Fornecedores & Serviços', data: [1014.95, 980.39, 969.90], backgroundColor: '#c5a36b', borderRadius: 4 }
+                        { label: 'Fornec. & Utilidades', data: [1014.95, 980.39, 969.90], backgroundColor: '#c5a36b', borderRadius: 4 },
+                        { label: 'Impostos (DAS)', data: [0, 683.14, 341.57], backgroundColor: '#d13232', borderRadius: 4 } // Nova barra de impostos
                     ]
                 },
                 options: {
@@ -234,10 +293,6 @@
                 }
             });
         }
-
-        // Inicia o sistema
-        renderTable();
-        initChart();
     </script>
 </body>
 </html>
