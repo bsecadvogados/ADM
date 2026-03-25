@@ -12,11 +12,10 @@
         .tab-btn { transition: all 0.3s ease; border-bottom: 3px solid transparent; }
         .tab-active { border-bottom: 3px solid var(--bsc-verde); color: var(--bsc-verde); font-weight: 700; }
         
-        /* Badges de Status */
-        .status-adiantado { background-color: #cffafe; color: #0891b2; } /* Ciano */
-        .status-pago { background-color: #dcfce7; color: #166534; } /* Verde */
-        .status-pendente { background-color: #fef08a; color: #854d0e; } /* Amarelo */
-        .status-atrasado { background-color: #fee2e2; color: #991b1b; } /* Vermelho */
+        .status-adiantado { background-color: #cffafe; color: #0891b2; } 
+        .status-pago { background-color: #dcfce7; color: #166534; } 
+        .status-pendente { background-color: #fef08a; color: #854d0e; } 
+        .status-atrasado { background-color: #fee2e2; color: #991b1b; } 
         
         .tipo-receita { color: #15803d; font-weight: bold; }
         .tipo-despesa { color: #b91c1c; font-weight: bold; }
@@ -61,7 +60,7 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Categoria</label>
-                        <input type="text" id="inp-categoria" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c]" placeholder="Ex: Energia, Honorários...">
+                        <input type="text" id="inp-categoria" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c]" placeholder="Ex: Energia, Honorários, Software...">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data de Vencimento</label>
@@ -132,9 +131,6 @@
             <div id="view-dashboard" class="block space-y-8 animate-fade-in">
                 <div class="flex justify-end">
                     <select id="dash-month-filter" onchange="calcularDashboard()" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2 font-bold shadow-sm outline-none">
-                        <option value="02/2026">Fevereiro / 2026</option>
-                        <option value="03/2026" selected>Março / 2026 (Atual)</option>
-                        <option value="04/2026">Abril / 2026</option>
                     </select>
                 </div>
 
@@ -154,7 +150,7 @@
                 </div>
 
                 <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                    <h2 class="text-lg font-bold text-[#004d2c] mb-6">Balanço Geral</h2>
+                    <h2 class="text-lg font-bold text-[#004d2c] mb-6">Balanço Geral (Últimos 6 Meses)</h2>
                     <div class="h-[350px]"><canvas id="fluxoChart"></canvas></div>
                 </div>
             </div>
@@ -163,10 +159,6 @@
                 <div class="bg-white p-6 rounded-2xl shadow-sm flex justify-between items-center border border-gray-100">
                     <h2 class="text-lg font-bold text-[#004d2c]">Livro Caixa Interativo</h2>
                     <select id="month-filter" onchange="renderTable()" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg p-2.5 outline-none font-bold">
-                        <option value="Todos">Todos os Meses</option>
-                        <option value="02/2026">Fevereiro / 2026</option>
-                        <option value="03/2026" selected>Março / 2026</option>
-                        <option value="04/2026">Abril / 2026</option>
                     </select>
                 </div>
 
@@ -184,7 +176,7 @@
                             </tr>
                         </thead>
                         <tbody id="table-body" class="divide-y divide-gray-100">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -196,7 +188,7 @@
                         <p class="text-xs text-gray-500">Compare a evolução de gastos recorrentes ao longo dos meses.</p>
                     </div>
                     <select id="analise-favorecido" onchange="gerarAnalise()" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 outline-none font-bold min-w-[200px]">
-                        </select>
+                    </select>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -253,8 +245,30 @@
         let chartFluxo = null;
         let chartAnalise = null;
 
+        // Chave atualizada para v4 para forçar o recarregamento do histórico completo
+        const DB_KEY = 'bsc_erp_db_v4';
+
         const defaultData = [
-            // FEVEREIRO 2026 (Amostragem Histórica)
+            // HISTÓRICO 2025 - HOSTINGER
+            { id: 301, tipo: 'Despesa', mes: '08/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 29.99, juros: 0, vencimento: '24/08/2025', status: 'Pago' },
+            { id: 302, tipo: 'Despesa', mes: '09/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 29.99, juros: 0, vencimento: '24/09/2025', status: 'Pago' },
+            { id: 303, tipo: 'Despesa', mes: '10/2025', favorecido: 'Hostinger (E-mail)', categoria: 'Software / TI', valor: 41.88, juros: 0, vencimento: '16/10/2025', status: 'Pago' },
+            { id: 304, tipo: 'Despesa', mes: '10/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 287.88, juros: 0, vencimento: '29/10/2025', status: 'Pago' },
+            { id: 305, tipo: 'Despesa', mes: '11/2025', favorecido: 'Hostinger (E-mail)', categoria: 'Software / TI', valor: 88.78, juros: 0, vencimento: '12/11/2025', status: 'Pago' },
+
+            // HISTÓRICO 2025 - PRONTO FIBRA E BRK SANEAMENTO
+            { id: 401, tipo: 'Despesa', mes: '08/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 50.27, juros: 1.20, vencimento: '25/08/2025', status: 'Pago' },
+            { id: 402, tipo: 'Despesa', mes: '09/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/09/2025', status: 'Pago' },
+            { id: 403, tipo: 'Despesa', mes: '10/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.75, vencimento: '25/10/2025', status: 'Pago' },
+            { id: 404, tipo: 'Despesa', mes: '11/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/11/2025', status: 'Pago' },
+            { id: 405, tipo: 'Despesa', mes: '12/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.99, vencimento: '25/12/2025', status: 'Pago' },
+            { id: 501, tipo: 'Despesa', mes: '12/2025', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 202.30, juros: 0, vencimento: '19/12/2025', status: 'Pago' },
+
+            // JANEIRO 2026
+            { id: 406, tipo: 'Despesa', mes: '01/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.83, vencimento: '25/01/2026', status: 'Pago' },
+            { id: 502, tipo: 'Despesa', mes: '01/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 206.35, juros: 0, vencimento: '19/01/2026', status: 'Pago' },
+
+            // FEVEREIRO 2026
             { id: 101, tipo: 'Despesa', mes: '02/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, juros: 0, vencimento: '05/02/2026', status: 'Pago' },
             { id: 102, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/02/2026', status: 'Pago' },
             { id: 103, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/02/2026', status: 'Pago' },
@@ -262,8 +276,9 @@
             { id: 105, tipo: 'Despesa', mes: '02/2026', favorecido: 'Aluguer Sala 603 (JK Business)', categoria: 'Infraestrutura', valor: 2500.00, juros: 0, vencimento: '23/02/2026', status: 'Pago' },
             { id: 106, tipo: 'Despesa', mes: '02/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 313.73, juros: 0, vencimento: '26/02/2026', status: 'Pago' },
             { id: 107, tipo: 'Despesa', mes: '02/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 208.45, juros: 0, vencimento: '19/02/2026', status: 'Pago' },
-            
-            // MARÇO 2026 (Atual completo)
+            { id: 407, tipo: 'Despesa', mes: '02/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.87, vencimento: '25/02/2026', status: 'Pago' }, 
+
+            // MARÇO 2026
             { id: 201, tipo: 'Despesa', mes: '03/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, juros: 0, vencimento: '05/03/2026', status: 'Pago' },
             { id: 202, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/03/2026', status: 'Pago' },
             { id: 203, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/03/2026', status: 'Pago' },
@@ -272,14 +287,17 @@
             { id: 206, tipo: 'Despesa', mes: '03/2026', favorecido: 'Aluguer Sala 603 (JK Business)', categoria: 'Infraestrutura', valor: 2500.00, juros: 0, vencimento: '23/03/2026', status: 'Pendente' },
             { id: 207, tipo: 'Despesa', mes: '03/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 232.20, juros: 0, vencimento: '19/03/2026', status: 'Atrasado' },
             { id: 208, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Apur. Fev)', categoria: 'Impostos', valor: 549.01, juros: 0, vencimento: '20/03/2026', status: 'Atrasado' },
-            { id: 209, tipo: 'Despesa', mes: '03/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/03/2026', status: 'Pago' },
+            { id: 408, tipo: 'Despesa', mes: '03/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/03/2026', status: 'Pago' },
             { id: 210, tipo: 'Despesa', mes: '03/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 258.29, juros: 0, vencimento: '26/03/2026', status: 'Pendente' },
             { id: 211, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Parc. 7/17)', categoria: 'Impostos', valor: 341.57, juros: 0, vencimento: '31/03/2026', status: 'Pendente' },
-            { id: 212, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Parc. 8/17)', categoria: 'Impostos', valor: 341.57, juros: 0, vencimento: '31/03/2026', status: 'Pendente' }
+            { id: 212, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Parc. 8/17)', categoria: 'Impostos', valor: 341.57, juros: 0, vencimento: '31/03/2026', status: 'Pendente' },
+
+            // ABRIL 2026
+            { id: 409, tipo: 'Despesa', mes: '04/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/04/2026', status: 'Pendente' }
         ];
 
         function inicializarBD() {
-            const dbSalvo = localStorage.getItem('bsc_erp_db');
+            const dbSalvo = localStorage.getItem(DB_KEY);
             if (dbSalvo) {
                 database = JSON.parse(dbSalvo);
                 database.forEach(item => { if(item.juros === undefined) item.juros = 0; });
@@ -287,14 +305,66 @@
                 database = defaultData;
                 salvarBD();
             }
+            
+            popularFiltrosMeses(); 
             calcularDashboard();
             renderTable();
             popularFiltroAnalise();
         }
-        function salvarBD() { localStorage.setItem('bsc_erp_db', JSON.stringify(database)); }
+        function salvarBD() { localStorage.setItem(DB_KEY, JSON.stringify(database)); }
 
         // ==========================================
-        // 3. NAVEGAÇÃO
+        // 3. FILTRAGEM DINÂMICA DE MESES
+        // ==========================================
+        function popularFiltrosMeses() {
+            const dashFilter = document.getElementById('dash-month-filter');
+            const extratoFilter = document.getElementById('month-filter');
+
+            const currentDashVal = dashFilter.value;
+            const currentExtratoVal = extratoFilter.value;
+
+            let mesesUnicos = [...new Set(database.map(item => item.mes))];
+
+            mesesUnicos.sort((a, b) => {
+                const [mA, yA] = a.split('/');
+                const [mB, yB] = b.split('/');
+                return new Date(yA, mA - 1) - new Date(yB, mB - 1);
+            });
+
+            const nomesMeses = {
+                '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
+                '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
+                '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
+            };
+
+            dashFilter.innerHTML = '';
+            mesesUnicos.forEach(mes => {
+                const [m, y] = mes.split('/');
+                dashFilter.insertAdjacentHTML('beforeend', `<option value="${mes}">${nomesMeses[m]} / ${y}</option>`);
+            });
+
+            extratoFilter.innerHTML = '<option value="Todos">Todos os Meses</option>';
+            mesesUnicos.forEach(mes => {
+                const [m, y] = mes.split('/');
+                extratoFilter.insertAdjacentHTML('beforeend', `<option value="${mes}">${nomesMeses[m]} / ${y}</option>`);
+            });
+
+            if (mesesUnicos.includes(currentDashVal)) {
+                dashFilter.value = currentDashVal;
+            } else if (mesesUnicos.length > 0) {
+                // Ao carregar, seleciona Março/2026 por defeito (ou o último disponível)
+                dashFilter.value = mesesUnicos.includes('03/2026') ? '03/2026' : mesesUnicos[mesesUnicos.length - 1]; 
+            }
+
+            if (currentExtratoVal === 'Todos' || mesesUnicos.includes(currentExtratoVal)) {
+                extratoFilter.value = currentExtratoVal;
+            } else if (mesesUnicos.length > 0) {
+                extratoFilter.value = mesesUnicos.includes('03/2026') ? '03/2026' : mesesUnicos[mesesUnicos.length - 1];
+            }
+        }
+
+        // ==========================================
+        // 4. NAVEGAÇÃO
         // ==========================================
         const formatCurrency = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
@@ -307,7 +377,7 @@
         }
 
         // ==========================================
-        // 4. CRUD (CRIAR, EDITAR, ELIMINAR)
+        // 5. CRUD (CRIAR, EDITAR, ELIMINAR)
         // ==========================================
         function abrirModal(id = null) {
             document.getElementById('modal-lancamento').classList.remove('hidden');
@@ -359,18 +429,27 @@
                 database.push(dadosSalvos);
             }
 
-            salvarBD(); fecharModal(); calcularDashboard(); renderTable(); popularFiltroAnalise();
+            salvarBD(); 
+            fecharModal(); 
+            popularFiltrosMeses(); 
+            calcularDashboard(); 
+            renderTable(); 
+            popularFiltroAnalise();
         }
 
         function excluirLancamento(id) {
             if(confirm('Tem a certeza que deseja eliminar este registo?')) {
                 database = database.filter(item => item.id !== id);
-                salvarBD(); calcularDashboard(); renderTable(); popularFiltroAnalise();
+                salvarBD(); 
+                popularFiltrosMeses(); 
+                calcularDashboard(); 
+                renderTable(); 
+                popularFiltroAnalise();
             }
         }
 
         // ==========================================
-        // 5. RENDERIZAÇÃO E GRÁFICOS
+        // 6. RENDERIZAÇÃO E GRÁFICOS
         // ==========================================
         function calcularDashboard() {
             const mesSel = document.getElementById('dash-month-filter').value;
@@ -433,7 +512,54 @@
         }
 
         // ==========================================
-        // 6. MÓDULO DE ANÁLISE COMPARATIVA
+        // 7. GRÁFICOS DINÂMICOS
+        // ==========================================
+        function atualizarGraficoFluxo() {
+            if (chartFluxo) chartFluxo.destroy();
+            
+            let mesesUnicos = [...new Set(database.map(item => item.mes))];
+            mesesUnicos.sort((a, b) => {
+                const [mA, yA] = a.split('/');
+                const [mB, yB] = b.split('/');
+                return new Date(yA, mA - 1) - new Date(yB, mB - 1);
+            });
+
+            const meses = mesesUnicos.slice(-6); // Exibe apenas os últimos 6 meses para boa visualização
+            
+            let recData = new Array(meses.length).fill(0);
+            let desData = new Array(meses.length).fill(0);
+
+            database.forEach(item => {
+                const idx = meses.indexOf(item.mes);
+                if(idx > -1) {
+                    const val = item.valor + (item.juros || 0);
+                    if(item.tipo === 'Receita') recData[idx] += val;
+                    if(item.tipo === 'Despesa') desData[idx] += val;
+                }
+            });
+
+            const nomesCurtos = { '01': 'Jan', '02': 'Fev', '03': 'Mar', '04': 'Abr', '05': 'Mai', '06': 'Jun', '07': 'Jul', '08': 'Ago', '09': 'Set', '10': 'Out', '11': 'Nov', '12': 'Dez' };
+            const labels = meses.map(m => {
+                const [mes, ano] = m.split('/');
+                return `${nomesCurtos[mes]}/${ano.slice(2)}`;
+            });
+
+            const ctx = document.getElementById('fluxoChart').getContext('2d');
+            chartFluxo = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Receitas', data: recData, backgroundColor: '#15803d', borderRadius: 4 },
+                        { label: 'Despesas', data: desData, backgroundColor: '#b91c1c', borderRadius: 4 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        // ==========================================
+        // 8. ANÁLISE COMPARATIVA
         // ==========================================
         function popularFiltroAnalise() {
             const select = document.getElementById('analise-favorecido');
@@ -502,34 +628,6 @@
                         fill: true,
                         tension: 0.3
                     }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-
-        function atualizarGraficoFluxo() {
-            if (chartFluxo) chartFluxo.destroy();
-            const meses = ['02/2026', '03/2026', '04/2026'];
-            let recData = [0,0,0], desData = [0,0,0];
-
-            database.forEach(item => {
-                const idx = meses.indexOf(item.mes);
-                if(idx > -1) {
-                    const val = item.valor + (item.juros || 0);
-                    if(item.tipo === 'Receita') recData[idx] += val;
-                    if(item.tipo === 'Despesa') desData[idx] += val;
-                }
-            });
-
-            const ctx = document.getElementById('fluxoChart').getContext('2d');
-            chartFluxo = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Fev/26', 'Mar/26', 'Abr/26'],
-                    datasets: [
-                        { label: 'Receitas', data: recData, backgroundColor: '#15803d', borderRadius: 4 },
-                        { label: 'Despesas', data: desData, backgroundColor: '#b91c1c', borderRadius: 4 }
-                    ]
                 },
                 options: { responsive: true, maintainAspectRatio: false }
             });
