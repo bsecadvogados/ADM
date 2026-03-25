@@ -163,10 +163,13 @@
             </div>
 
             <div id="view-extrato" class="hidden space-y-6 animate-fade-in">
-                <div class="bg-white p-6 rounded-2xl shadow-sm flex justify-between items-center border border-gray-100">
+                <div class="bg-white p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center border border-gray-100 gap-4">
                     <h2 class="text-lg font-bold text-[#004d2c]">Livro Caixa (Competência)</h2>
-                    <select id="month-filter" onchange="renderTable()" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg p-2.5 outline-none font-bold">
-                    </select>
+                    <div class="flex gap-4 w-full md:w-auto">
+                        <input type="text" id="busca-extrato" onkeyup="pesquisarTabela('table-body', 'busca-extrato')" placeholder="🔍 Buscar lançamento..." class="w-full md:w-64 border border-gray-200 rounded-lg p-2.5 outline-none focus:border-[#004d2c] text-sm">
+                        <select id="month-filter" onchange="renderTable()" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg p-2.5 outline-none font-bold">
+                        </select>
+                    </div>
                 </div>
 
                 <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
@@ -190,17 +193,20 @@
             </div>
 
             <div id="view-relatorio" class="hidden space-y-6 animate-fade-in">
-                <div class="bg-white p-6 rounded-2xl shadow-sm flex justify-between items-center border border-gray-100 border-l-8 border-l-green-600">
+                <div class="bg-white p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center border border-gray-100 border-l-8 border-l-green-600 gap-4">
                     <div>
                         <h2 class="text-lg font-bold text-[#004d2c]">Relatório de Pagamentos Efetuados</h2>
                         <p class="text-xs text-gray-500">Filtrado exclusivamente pela data real em que o dinheiro saiu do caixa.</p>
                     </div>
-                    <select id="relatorio-mes" onchange="gerarRelatorio()" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg p-2.5 outline-none font-bold min-w-[200px]">
+                    <div class="flex gap-4 w-full md:w-auto">
+                        <input type="text" id="busca-relatorio" onkeyup="pesquisarTabela('relatorio-body', 'busca-relatorio')" placeholder="🔍 Buscar pagamento..." class="w-full md:w-64 border border-gray-200 rounded-lg p-2.5 outline-none focus:border-[#004d2c] text-sm">
+                        <select id="relatorio-mes" onchange="gerarRelatorio()" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg p-2.5 outline-none font-bold min-w-[200px]">
                         </select>
+                    </div>
                 </div>
 
                 <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-green-600 flex justify-between items-center">
-                    <h3 class="text-sm text-gray-500 uppercase font-bold tracking-wider">Total Efetivamente Pago no Mês Selecionado</h3>
+                    <h3 class="text-sm text-gray-500 uppercase font-bold tracking-wider">Total Efetivamente Pago no Mês</h3>
                     <p class="text-4xl font-black text-green-600" id="relatorio-total">R$ 0,00</p>
                 </div>
 
@@ -280,31 +286,39 @@
         window.onload = checkAuthStatus;
 
         // ==========================================
-        // 2. BASE DE DADOS LOCAL 
+        // 2. BASE DE DADOS LOCAL (V7 - Histórico Completo Energisa)
         // ==========================================
         let database = [];
         let chartFluxo = null;
         let chartAnalise = null;
 
-        const DB_KEY = 'bsc_erp_db_v6'; // Atualizado para V6 para incluir as tabelas corretas
+        const DB_KEY = 'bsc_erp_db_v7';
 
         const defaultData = [
-            // HISTÓRICO 2025 - HOSTINGER
+            // HISTÓRICO HOSTINGER
             { id: 301, tipo: 'Despesa', mes: '08/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 29.99, juros: 0, vencimento: '24/08/2025', pagamento: '24/08/2025', status: 'Pago' },
             { id: 302, tipo: 'Despesa', mes: '09/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 29.99, juros: 0, vencimento: '24/09/2025', pagamento: '24/09/2025', status: 'Pago' },
             { id: 303, tipo: 'Despesa', mes: '10/2025', favorecido: 'Hostinger (E-mail)', categoria: 'Software / TI', valor: 41.88, juros: 0, vencimento: '16/10/2025', pagamento: '16/10/2025', status: 'Pago' },
             { id: 304, tipo: 'Despesa', mes: '10/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 287.88, juros: 0, vencimento: '29/10/2025', pagamento: '29/10/2025', status: 'Pago' },
             { id: 305, tipo: 'Despesa', mes: '11/2025', favorecido: 'Hostinger (E-mail)', categoria: 'Software / TI', valor: 88.78, juros: 0, vencimento: '12/11/2025', pagamento: '12/11/2025', status: 'Pago' },
 
+            // HISTÓRICO ENERGISA (Pagamento em lote 17/02)
+            { id: 601, tipo: 'Despesa', mes: '12/2025', favorecido: 'Energisa', categoria: 'Energia', valor: 362.78, juros: 0, vencimento: '26/12/2025', pagamento: '17/02/2026', status: 'Atrasado' },
+            { id: 602, tipo: 'Despesa', mes: '01/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 160.65, juros: 0, vencimento: '26/01/2026', pagamento: '17/02/2026', status: 'Atrasado' },
+            { id: 106, tipo: 'Despesa', mes: '02/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 313.73, juros: 0, vencimento: '26/02/2026', pagamento: '17/02/2026', status: 'Adiantado' },
+            { id: 210, tipo: 'Despesa', mes: '03/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 258.29, juros: 0, vencimento: '26/03/2026', pagamento: '-', status: 'Pendente' },
+
             // HISTÓRICO BRK SANEAMENTO 
             { id: 501, tipo: 'Despesa', mes: '12/2025', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 202.30, juros: 0, vencimento: '19/12/2025', pagamento: '12/02/2026', status: 'Atrasado' },
             { id: 502, tipo: 'Despesa', mes: '01/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 206.35, juros: 0, vencimento: '19/01/2026', pagamento: '12/02/2026', status: 'Atrasado' },
             { id: 107, tipo: 'Despesa', mes: '02/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 208.45, juros: 0, vencimento: '19/02/2026', pagamento: '12/02/2026', status: 'Adiantado' },
+            { id: 207, tipo: 'Despesa', mes: '03/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 232.20, juros: 0, vencimento: '19/03/2026', pagamento: '-', status: 'Atrasado' },
 
             // HISTÓRICO PRONTO FIBRA
             { id: 406, tipo: 'Despesa', mes: '01/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.83, vencimento: '25/01/2026', pagamento: '05/02/2026', status: 'Atrasado' },
             { id: 407, tipo: 'Despesa', mes: '02/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.87, vencimento: '25/02/2026', pagamento: '09/03/2026', status: 'Atrasado' },
             { id: 408, tipo: 'Despesa', mes: '03/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/03/2026', pagamento: '09/03/2026', status: 'Adiantado' },
+            { id: 409, tipo: 'Despesa', mes: '04/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/04/2026', pagamento: '-', status: 'Pendente' },
 
             // FEVEREIRO 2026 
             { id: 101, tipo: 'Despesa', mes: '02/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
@@ -312,8 +326,7 @@
             { id: 103, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
             { id: 104, tipo: 'Despesa', mes: '02/2026', favorecido: 'Equipe de Limpeza', categoria: 'Serviços', valor: 800.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
             { id: 105, tipo: 'Despesa', mes: '02/2026', favorecido: 'Aluguel Sala 603 (JK Business)', categoria: 'Infraestrutura', valor: 2500.00, juros: 0, vencimento: '23/02/2026', pagamento: '23/02/2026', status: 'Pago' },
-            { id: 106, tipo: 'Despesa', mes: '02/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 313.73, juros: 0, vencimento: '26/02/2026', pagamento: '26/02/2026', status: 'Pago' },
-
+            
             // MARÇO 2026
             { id: 201, tipo: 'Despesa', mes: '03/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
             { id: 202, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
@@ -321,14 +334,9 @@
             { id: 204, tipo: 'Despesa', mes: '03/2026', favorecido: 'Equipe de Limpeza', categoria: 'Serviços', valor: 800.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
             { id: 205, tipo: 'Despesa', mes: '03/2026', favorecido: 'Mastercont Contadores', categoria: 'Contabilidade', valor: 370.00, juros: 0, vencimento: '10/03/2026', pagamento: '-', status: 'Pendente' },
             { id: 206, tipo: 'Despesa', mes: '03/2026', favorecido: 'Aluguel Sala 603 (JK Business)', categoria: 'Infraestrutura', valor: 2500.00, juros: 0, vencimento: '23/03/2026', pagamento: '-', status: 'Pendente' },
-            { id: 207, tipo: 'Despesa', mes: '03/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 232.20, juros: 0, vencimento: '19/03/2026', pagamento: '-', status: 'Atrasado' },
             { id: 208, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Apur. Fev)', categoria: 'Impostos', valor: 549.01, juros: 0, vencimento: '20/03/2026', pagamento: '-', status: 'Atrasado' },
-            { id: 210, tipo: 'Despesa', mes: '03/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 258.29, juros: 0, vencimento: '26/03/2026', pagamento: '-', status: 'Pendente' },
             { id: 211, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Parc. 7/17)', categoria: 'Impostos', valor: 341.57, juros: 0, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' },
-            { id: 212, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Parc. 8/17)', categoria: 'Impostos', valor: 341.57, juros: 0, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' },
-
-            // ABRIL 2026
-            { id: 409, tipo: 'Despesa', mes: '04/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/04/2026', pagamento: '-', status: 'Pendente' }
+            { id: 212, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Parc. 8/17)', categoria: 'Impostos', valor: 341.57, juros: 0, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' }
         ];
 
         function inicializarBD() {
@@ -354,8 +362,20 @@
         function salvarBD() { localStorage.setItem(DB_KEY, JSON.stringify(database)); }
 
         // ==========================================
-        // 3. FILTRAGEM DINÂMICA DE MESES
+        // 3. PESQUISA E FILTRAGEM DINÂMICA
         // ==========================================
+        
+        // Função Global de Pesquisa
+        function pesquisarTabela(tbodyId, inputId) {
+            const termo = document.getElementById(inputId).value.toLowerCase();
+            const linhas = document.querySelectorAll(`#${tbodyId} tr`);
+            
+            linhas.forEach(linha => {
+                const textoLinha = linha.innerText.toLowerCase();
+                linha.style.display = textoLinha.includes(termo) ? '' : 'none';
+            });
+        }
+
         const nomesMeses = { '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril', '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto', '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro' };
 
         function popularFiltrosMeses() {
@@ -398,7 +418,6 @@
             }
         }
 
-        // Filtro exclusivo para o Relatório (Baseado na Data de Pagamento Real)
         function popularFiltroRelatorio() {
             const select = document.getElementById('relatorio-mes');
             const currentVal = select.value;
@@ -443,6 +462,7 @@
             });
             if(view === 'analise') gerarAnalise();
             if(view === 'relatorio') gerarRelatorio();
+            if(view === 'extrato') renderTable();
         }
 
         // ==========================================
@@ -562,14 +582,19 @@
         }
 
         function renderTable() {
+            document.getElementById('busca-extrato').value = ''; // Limpa a busca ao mudar de mês
             const mesSel = document.getElementById('month-filter').value;
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
 
             let filteredData = mesSel === 'Todos' ? database : database.filter(item => item.mes === mesSel);
             
-            // Ordenar por ID para a visualização do Livro Caixa
-            filteredData.sort((a, b) => b.id - a.id);
+            // Ordenar por Vencimento para a visualização do Livro Caixa
+            filteredData.sort((a, b) => {
+                const dA = a.vencimento.split('/').reverse().join('');
+                const dB = b.vencimento.split('/').reverse().join('');
+                return dB.localeCompare(dA); 
+            });
 
             filteredData.forEach(item => {
                 const isRec = item.tipo === 'Receita';
@@ -605,16 +630,16 @@
         }
 
         // ==========================================
-        // ABA NOVA: RELATÓRIO DE PAGAMENTOS
+        // ABA: RELATÓRIO DE PAGAMENTOS
         // ==========================================
         function gerarRelatorio() {
+            document.getElementById('busca-relatorio').value = ''; // Limpa a busca
             const mesSel = document.getElementById('relatorio-mes').value;
             const tbody = document.getElementById('relatorio-body');
             tbody.innerHTML = '';
             
             let totalPago = 0;
             
-            // Pega apenas despesas que efetivamente tenham data de pagamento preenchida
             let pagos = database.filter(i => i.tipo === 'Despesa' && i.pagamento && i.pagamento !== '-');
             
             if (mesSel !== 'Todos') {
@@ -624,11 +649,11 @@
                 });
             }
             
-            // Ordenar por data de pagamento (mais recente primeiro)
+            // Ordenar por data de pagamento
             pagos.sort((a, b) => {
                 const dA = a.pagamento.split('/').reverse().join('');
                 const dB = b.pagamento.split('/').reverse().join('');
-                return dB.localeCompare(dA); // Decrescente
+                return dB.localeCompare(dA); 
             });
             
             pagos.forEach(item => {
