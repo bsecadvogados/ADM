@@ -25,7 +25,7 @@
 <body class="text-gray-800 antialiased">
 
     <div id="modal-lancamento" class="fixed inset-0 bg-black bg-opacity-60 z-[200] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
             <div class="bg-[#004d2c] px-6 py-4 flex justify-between items-center">
                 <h3 class="text-white font-bold text-lg" id="modal-titulo">Novo Lançamento</h3>
                 <button onclick="fecharModal()" class="text-white hover:text-gray-300 font-bold text-xl">&times;</button>
@@ -52,19 +52,25 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição / Favorecido</label>
-                    <input type="text" id="inp-descricao" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c]" placeholder="Ex: Energisa, BRK, Cliente X...">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição / Favorecido</label>
+                        <input type="text" id="inp-descricao" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c]" placeholder="Ex: Energisa, BRK, Cliente X...">
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Categoria</label>
+                        <input type="text" id="inp-categoria" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c]" placeholder="Ex: Energia, Honorários, Software...">
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Categoria</label>
-                        <input type="text" id="inp-categoria" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c]" placeholder="Ex: Energia, Honorários, Software...">
-                    </div>
-                    <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data de Vencimento</label>
                         <input type="date" id="inp-vencimento" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#004d2c] uppercase mb-1">Data de Pagamento</label>
+                        <input type="date" id="inp-pagamento" class="w-full border border-[#004d2c] rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-[#004d2c] bg-green-50">
                     </div>
                 </div>
 
@@ -168,6 +174,7 @@
                             <tr>
                                 <th class="px-6 py-4">Status</th>
                                 <th class="px-6 py-4">Vencimento</th>
+                                <th class="px-6 py-4 text-[#004d2c]">Pagamento</th>
                                 <th class="px-6 py-4">Favorecido / Cliente</th>
                                 <th class="px-6 py-4 text-right">Valor Original</th>
                                 <th class="px-6 py-4 text-right text-red-500">Juros/Multa</th>
@@ -176,7 +183,7 @@
                             </tr>
                         </thead>
                         <tbody id="table-body" class="divide-y divide-gray-100">
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </div>
@@ -239,68 +246,65 @@
         window.onload = checkAuthStatus;
 
         // ==========================================
-        // 2. BASE DE DADOS LOCAL (LocalStorage)
+        // 2. BASE DE DADOS LOCAL (Atualizado com Datas de Pagamento e Histórico Exato)
         // ==========================================
         let database = [];
         let chartFluxo = null;
         let chartAnalise = null;
 
-        // Chave atualizada para v4 para forçar o recarregamento do histórico completo
-        const DB_KEY = 'bsc_erp_db_v4';
+        const DB_KEY = 'bsc_erp_db_v5';
 
         const defaultData = [
             // HISTÓRICO 2025 - HOSTINGER
-            { id: 301, tipo: 'Despesa', mes: '08/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 29.99, juros: 0, vencimento: '24/08/2025', status: 'Pago' },
-            { id: 302, tipo: 'Despesa', mes: '09/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 29.99, juros: 0, vencimento: '24/09/2025', status: 'Pago' },
-            { id: 303, tipo: 'Despesa', mes: '10/2025', favorecido: 'Hostinger (E-mail)', categoria: 'Software / TI', valor: 41.88, juros: 0, vencimento: '16/10/2025', status: 'Pago' },
-            { id: 304, tipo: 'Despesa', mes: '10/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 287.88, juros: 0, vencimento: '29/10/2025', status: 'Pago' },
-            { id: 305, tipo: 'Despesa', mes: '11/2025', favorecido: 'Hostinger (E-mail)', categoria: 'Software / TI', valor: 88.78, juros: 0, vencimento: '12/11/2025', status: 'Pago' },
+            { id: 301, tipo: 'Despesa', mes: '08/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 29.99, juros: 0, vencimento: '24/08/2025', pagamento: '24/08/2025', status: 'Pago' },
+            { id: 302, tipo: 'Despesa', mes: '09/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 29.99, juros: 0, vencimento: '24/09/2025', pagamento: '24/09/2025', status: 'Pago' },
+            { id: 303, tipo: 'Despesa', mes: '10/2025', favorecido: 'Hostinger (E-mail)', categoria: 'Software / TI', valor: 41.88, juros: 0, vencimento: '16/10/2025', pagamento: '16/10/2025', status: 'Pago' },
+            { id: 304, tipo: 'Despesa', mes: '10/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 287.88, juros: 0, vencimento: '29/10/2025', pagamento: '29/10/2025', status: 'Pago' },
+            { id: 305, tipo: 'Despesa', mes: '11/2025', favorecido: 'Hostinger (E-mail)', categoria: 'Software / TI', valor: 88.78, juros: 0, vencimento: '12/11/2025', pagamento: '12/11/2025', status: 'Pago' },
 
-            // HISTÓRICO 2025 - PRONTO FIBRA E BRK SANEAMENTO
-            { id: 401, tipo: 'Despesa', mes: '08/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 50.27, juros: 1.20, vencimento: '25/08/2025', status: 'Pago' },
-            { id: 402, tipo: 'Despesa', mes: '09/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/09/2025', status: 'Pago' },
-            { id: 403, tipo: 'Despesa', mes: '10/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.75, vencimento: '25/10/2025', status: 'Pago' },
-            { id: 404, tipo: 'Despesa', mes: '11/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/11/2025', status: 'Pago' },
-            { id: 405, tipo: 'Despesa', mes: '12/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.99, vencimento: '25/12/2025', status: 'Pago' },
-            { id: 501, tipo: 'Despesa', mes: '12/2025', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 202.30, juros: 0, vencimento: '19/12/2025', status: 'Pago' },
+            // HISTÓRICO BRK SANEAMENTO (Lote de Pagamentos em 12/02/2026)
+            { id: 501, tipo: 'Despesa', mes: '12/2025', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 202.30, juros: 0, vencimento: '19/12/2025', pagamento: '12/02/2026', status: 'Atrasado' },
+            { id: 502, tipo: 'Despesa', mes: '01/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 206.35, juros: 0, vencimento: '19/01/2026', pagamento: '12/02/2026', status: 'Atrasado' },
+            { id: 107, tipo: 'Despesa', mes: '02/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 208.45, juros: 0, vencimento: '19/02/2026', pagamento: '12/02/2026', status: 'Adiantado' },
 
-            // JANEIRO 2026
-            { id: 406, tipo: 'Despesa', mes: '01/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.83, vencimento: '25/01/2026', status: 'Pago' },
-            { id: 502, tipo: 'Despesa', mes: '01/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 206.35, juros: 0, vencimento: '19/01/2026', status: 'Pago' },
+            // HISTÓRICO PRONTO FIBRA (Com Datas de Pagamento e Juros Exatos)
+            { id: 406, tipo: 'Despesa', mes: '01/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.83, vencimento: '25/01/2026', pagamento: '05/02/2026', status: 'Atrasado' },
+            { id: 407, tipo: 'Despesa', mes: '02/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.87, vencimento: '25/02/2026', pagamento: '09/03/2026', status: 'Atrasado' },
+            { id: 408, tipo: 'Despesa', mes: '03/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/03/2026', pagamento: '09/03/2026', status: 'Adiantado' },
 
-            // FEVEREIRO 2026
-            { id: 101, tipo: 'Despesa', mes: '02/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, juros: 0, vencimento: '05/02/2026', status: 'Pago' },
-            { id: 102, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/02/2026', status: 'Pago' },
-            { id: 103, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/02/2026', status: 'Pago' },
-            { id: 104, tipo: 'Despesa', mes: '02/2026', favorecido: 'Equipa de Limpeza', categoria: 'Serviços', valor: 800.00, juros: 0, vencimento: '05/02/2026', status: 'Pago' },
-            { id: 105, tipo: 'Despesa', mes: '02/2026', favorecido: 'Aluguer Sala 603 (JK Business)', categoria: 'Infraestrutura', valor: 2500.00, juros: 0, vencimento: '23/02/2026', status: 'Pago' },
-            { id: 106, tipo: 'Despesa', mes: '02/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 313.73, juros: 0, vencimento: '26/02/2026', status: 'Pago' },
-            { id: 107, tipo: 'Despesa', mes: '02/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 208.45, juros: 0, vencimento: '19/02/2026', status: 'Pago' },
-            { id: 407, tipo: 'Despesa', mes: '02/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.87, vencimento: '25/02/2026', status: 'Pago' }, 
+            // FEVEREIRO 2026 (Fixos)
+            { id: 101, tipo: 'Despesa', mes: '02/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
+            { id: 102, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
+            { id: 103, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
+            { id: 104, tipo: 'Despesa', mes: '02/2026', favorecido: 'Equipa de Limpeza', categoria: 'Serviços', valor: 800.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
+            { id: 105, tipo: 'Despesa', mes: '02/2026', favorecido: 'Aluguer Sala 603 (JK Business)', categoria: 'Infraestrutura', valor: 2500.00, juros: 0, vencimento: '23/02/2026', pagamento: '23/02/2026', status: 'Pago' },
+            { id: 106, tipo: 'Despesa', mes: '02/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 313.73, juros: 0, vencimento: '26/02/2026', pagamento: '26/02/2026', status: 'Pago' },
 
             // MARÇO 2026
-            { id: 201, tipo: 'Despesa', mes: '03/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, juros: 0, vencimento: '05/03/2026', status: 'Pago' },
-            { id: 202, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/03/2026', status: 'Pago' },
-            { id: 203, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/03/2026', status: 'Pago' },
-            { id: 204, tipo: 'Despesa', mes: '03/2026', favorecido: 'Equipa de Limpeza', categoria: 'Serviços', valor: 800.00, juros: 0, vencimento: '05/03/2026', status: 'Pago' },
-            { id: 205, tipo: 'Despesa', mes: '03/2026', favorecido: 'Mastercont Contadores', categoria: 'Contabilidade', valor: 370.00, juros: 0, vencimento: '10/03/2026', status: 'Pago' },
-            { id: 206, tipo: 'Despesa', mes: '03/2026', favorecido: 'Aluguer Sala 603 (JK Business)', categoria: 'Infraestrutura', valor: 2500.00, juros: 0, vencimento: '23/03/2026', status: 'Pendente' },
-            { id: 207, tipo: 'Despesa', mes: '03/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 232.20, juros: 0, vencimento: '19/03/2026', status: 'Atrasado' },
-            { id: 208, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Apur. Fev)', categoria: 'Impostos', valor: 549.01, juros: 0, vencimento: '20/03/2026', status: 'Atrasado' },
-            { id: 408, tipo: 'Despesa', mes: '03/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/03/2026', status: 'Pago' },
-            { id: 210, tipo: 'Despesa', mes: '03/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 258.29, juros: 0, vencimento: '26/03/2026', status: 'Pendente' },
-            { id: 211, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Parc. 7/17)', categoria: 'Impostos', valor: 341.57, juros: 0, vencimento: '31/03/2026', status: 'Pendente' },
-            { id: 212, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Parc. 8/17)', categoria: 'Impostos', valor: 341.57, juros: 0, vencimento: '31/03/2026', status: 'Pendente' },
+            { id: 201, tipo: 'Despesa', mes: '03/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
+            { id: 202, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
+            { id: 203, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
+            { id: 204, tipo: 'Despesa', mes: '03/2026', favorecido: 'Equipa de Limpeza', categoria: 'Serviços', valor: 800.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
+            { id: 205, tipo: 'Despesa', mes: '03/2026', favorecido: 'Mastercont Contadores', categoria: 'Contabilidade', valor: 370.00, juros: 0, vencimento: '10/03/2026', pagamento: '-', status: 'Pendente' },
+            { id: 206, tipo: 'Despesa', mes: '03/2026', favorecido: 'Aluguer Sala 603 (JK Business)', categoria: 'Infraestrutura', valor: 2500.00, juros: 0, vencimento: '23/03/2026', pagamento: '-', status: 'Pendente' },
+            { id: 207, tipo: 'Despesa', mes: '03/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 232.20, juros: 0, vencimento: '19/03/2026', pagamento: '-', status: 'Atrasado' },
+            { id: 208, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Apur. Fev)', categoria: 'Impostos', valor: 549.01, juros: 0, vencimento: '20/03/2026', pagamento: '-', status: 'Atrasado' },
+            { id: 210, tipo: 'Despesa', mes: '03/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 258.29, juros: 0, vencimento: '26/03/2026', pagamento: '-', status: 'Pendente' },
+            { id: 211, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Parc. 7/17)', categoria: 'Impostos', valor: 341.57, juros: 0, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' },
+            { id: 212, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Parc. 8/17)', categoria: 'Impostos', valor: 341.57, juros: 0, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' },
 
             // ABRIL 2026
-            { id: 409, tipo: 'Despesa', mes: '04/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/04/2026', status: 'Pendente' }
+            { id: 409, tipo: 'Despesa', mes: '04/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/04/2026', pagamento: '-', status: 'Pendente' }
         ];
 
         function inicializarBD() {
             const dbSalvo = localStorage.getItem(DB_KEY);
             if (dbSalvo) {
                 database = JSON.parse(dbSalvo);
-                database.forEach(item => { if(item.juros === undefined) item.juros = 0; });
+                database.forEach(item => { 
+                    if(item.juros === undefined) item.juros = 0; 
+                    if(item.pagamento === undefined) item.pagamento = '-';
+                });
             } else {
                 database = defaultData;
                 salvarBD();
@@ -352,7 +356,6 @@
             if (mesesUnicos.includes(currentDashVal)) {
                 dashFilter.value = currentDashVal;
             } else if (mesesUnicos.length > 0) {
-                // Ao carregar, seleciona Março/2026 por defeito (ou o último disponível)
                 dashFilter.value = mesesUnicos.includes('03/2026') ? '03/2026' : mesesUnicos[mesesUnicos.length - 1]; 
             }
 
@@ -390,6 +393,13 @@
                 document.getElementById('inp-descricao').value = item.favorecido;
                 document.getElementById('inp-categoria').value = item.categoria;
                 document.getElementById('inp-vencimento').value = item.vencimento.split('/').reverse().join('-');
+                
+                if (item.pagamento && item.pagamento !== '-') {
+                    document.getElementById('inp-pagamento').value = item.pagamento.split('/').reverse().join('-');
+                } else {
+                    document.getElementById('inp-pagamento').value = '';
+                }
+
                 document.getElementById('inp-valor').value = item.valor;
                 document.getElementById('inp-juros').value = item.juros || 0;
             } else {
@@ -405,10 +415,18 @@
         function guardarLancamento(e) {
             e.preventDefault();
             const idForm = document.getElementById('inp-id').value;
-            const dateStr = document.getElementById('inp-vencimento').value;
-            const partes = dateStr.split('-');
-            const mesRef = `${partes[1]}/${partes[0]}`;
-            const dataVenc = `${partes[2]}/${partes[1]}/${partes[0]}`;
+            const dateVencStr = document.getElementById('inp-vencimento').value;
+            const datePagStr = document.getElementById('inp-pagamento').value;
+
+            const partesVenc = dateVencStr.split('-');
+            const mesRef = `${partesVenc[1]}/${partesVenc[0]}`;
+            const dataVenc = `${partesVenc[2]}/${partesVenc[1]}/${partesVenc[0]}`;
+            
+            let dataPag = '-';
+            if (datePagStr) {
+                const partesPag = datePagStr.split('-');
+                dataPag = `${partesPag[2]}/${partesPag[1]}/${partesPag[0]}`;
+            }
 
             const dadosSalvos = {
                 tipo: document.getElementById('inp-tipo').value,
@@ -418,6 +436,7 @@
                 valor: parseFloat(document.getElementById('inp-valor').value),
                 juros: parseFloat(document.getElementById('inp-juros').value) || 0,
                 vencimento: dataVenc,
+                pagamento: dataPag,
                 status: document.getElementById('inp-status').value
             };
 
@@ -478,6 +497,8 @@
             tbody.innerHTML = '';
 
             let filteredData = mesSel === 'Todos' ? database : database.filter(item => item.mes === mesSel);
+            
+            // Ordenar por ID ou Vencimento
             filteredData.sort((a, b) => b.id - a.id);
 
             filteredData.forEach(item => {
@@ -492,11 +513,13 @@
                 if(item.status === 'Atrasado') bStatus = `<span class="px-3 py-1 rounded-full text-[10px] uppercase font-bold status-atrasado">Atrasado</span>`;
 
                 const strJuros = item.juros > 0 ? `<span class="text-red-500 font-bold text-xs">+ ${formatCurrency(item.juros)}</span>` : `<span class="text-gray-300">-</span>`;
+                const displayPagamento = item.pagamento === '-' ? `<span class="text-gray-400 italic">Pendente</span>` : `<span class="font-bold text-[#004d2c]">${item.pagamento}</span>`;
 
                 const row = `
                     <tr class="hover:bg-gray-50 border-b border-gray-100 transition">
                         <td class="px-6 py-4 text-center">${bStatus}</td>
-                        <td class="px-6 py-4 font-mono text-xs">${item.vencimento}</td>
+                        <td class="px-6 py-4 font-mono text-xs text-gray-500">${item.vencimento}</td>
+                        <td class="px-6 py-4 font-mono text-xs">${displayPagamento}</td>
                         <td class="px-6 py-4 font-bold text-gray-900">${item.favorecido} <br><span class="text-[10px] font-normal text-gray-400 uppercase tracking-widest">${item.categoria}</span></td>
                         <td class="px-6 py-4 text-right font-mono text-sm">${formatCurrency(item.valor)}</td>
                         <td class="px-6 py-4 text-right">${isRec ? '-' : strJuros}</td>
@@ -524,7 +547,7 @@
                 return new Date(yA, mA - 1) - new Date(yB, mB - 1);
             });
 
-            const meses = mesesUnicos.slice(-6); // Exibe apenas os últimos 6 meses para boa visualização
+            const meses = mesesUnicos.slice(-6); 
             
             let recData = new Array(meses.length).fill(0);
             let desData = new Array(meses.length).fill(0);
