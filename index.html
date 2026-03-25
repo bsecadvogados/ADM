@@ -42,7 +42,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status (1ª Parcela)</label>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
                         <select id="inp-status" class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c] font-semibold">
                             <option value="Pago">Pago no Prazo</option>
                             <option value="Adiantado">Pago Adiantado</option>
@@ -59,7 +59,7 @@
                     </div>
                     <div class="col-span-2 md:col-span-1">
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Categoria</label>
-                        <input type="text" id="inp-categoria" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c]" placeholder="Ex: Energia, Honorários, Software...">
+                        <input type="text" id="inp-categoria" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c]" placeholder="Ex: Energia, Honorários, Infraestrutura...">
                     </div>
                 </div>
 
@@ -283,15 +283,14 @@
         window.onload = checkAuthStatus;
 
         // ==========================================
-        // 2. BASE DE DADOS (V8 - Projeção 2026 e Recorrência)
+        // 2. BASE DE DADOS (V9 - Projeção Completa com Consumo Variável)
         // ==========================================
         let database = [];
         let chartFluxo = null;
         let chartAnalise = null;
 
-        const DB_KEY = 'bsc_erp_db_v8';
+        const DB_KEY = 'bsc_erp_db_v9';
 
-        // Geração automática dos dados iniciais e projeção de 2026
         const defaultData = (function() {
             let data = [
                 // Histórico Hostinger
@@ -300,7 +299,7 @@
                 { id: 303, tipo: 'Despesa', mes: '10/2025', favorecido: 'Hostinger (E-mail)', categoria: 'Software / TI', valor: 41.88, juros: 0, vencimento: '16/10/2025', pagamento: '16/10/2025', status: 'Pago' },
                 { id: 304, tipo: 'Despesa', mes: '10/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 287.88, juros: 0, vencimento: '29/10/2025', pagamento: '29/10/2025', status: 'Pago' },
                 { id: 305, tipo: 'Despesa', mes: '11/2025', favorecido: 'Hostinger (E-mail)', categoria: 'Software / TI', valor: 88.78, juros: 0, vencimento: '12/11/2025', pagamento: '12/11/2025', status: 'Pago' },
-                // Histórico Pronto Fibra / BRK / Energisa antigos
+                // Histórico Pronto Fibra / BRK / Energisa antigas
                 { id: 401, tipo: 'Despesa', mes: '08/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 50.27, juros: 1.20, vencimento: '25/08/2025', pagamento: '05/09/2025', status: 'Pago' },
                 { id: 402, tipo: 'Despesa', mes: '09/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/09/2025', pagamento: '25/09/2025', status: 'Pago' },
                 { id: 403, tipo: 'Despesa', mes: '10/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.75, vencimento: '25/10/2025', pagamento: '05/11/2025', status: 'Pago' },
@@ -311,7 +310,7 @@
                 { id: 406, tipo: 'Despesa', mes: '01/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.83, vencimento: '25/01/2026', pagamento: '05/02/2026', status: 'Atrasado' },
                 { id: 502, tipo: 'Despesa', mes: '01/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 206.35, juros: 0, vencimento: '19/01/2026', pagamento: '12/02/2026', status: 'Atrasado' },
                 { id: 602, tipo: 'Despesa', mes: '01/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 160.65, juros: 0, vencimento: '26/01/2026', pagamento: '17/02/2026', status: 'Atrasado' },
-                // Feveiro 2026
+                // FEVEREIRO 2026
                 { id: 101, tipo: 'Despesa', mes: '02/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
                 { id: 102, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
                 { id: 103, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
@@ -320,7 +319,7 @@
                 { id: 106, tipo: 'Despesa', mes: '02/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 313.73, juros: 0, vencimento: '26/02/2026', pagamento: '17/02/2026', status: 'Adiantado' },
                 { id: 107, tipo: 'Despesa', mes: '02/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 208.45, juros: 0, vencimento: '19/02/2026', pagamento: '12/02/2026', status: 'Adiantado' },
                 { id: 407, tipo: 'Despesa', mes: '02/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.87, vencimento: '25/02/2026', pagamento: '09/03/2026', status: 'Atrasado' },
-                // Março 2026
+                // MARÇO 2026
                 { id: 201, tipo: 'Despesa', mes: '03/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
                 { id: 202, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
                 { id: 203, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
@@ -335,15 +334,17 @@
                 { id: 212, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Parc. 8/17)', categoria: 'Impostos', valor: 341.57, juros: 0, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' }
             ];
 
-            // Gerador Automático para o resto de 2026 (Abril a Dezembro)
+            // Geração automática até o fim do ano (Adicionada Energia e Água)
             const custosFixos = [
                 { f: 'Iago Manguary', c: 'Controller Jurídico', v: 1800, d: '05' },
                 { f: 'Adv. Geovana', c: 'Honorários', v: 1000, d: '05' },
                 { f: 'Adv. Felipe', c: 'Honorários', v: 1000, d: '05' },
                 { f: 'Equipe de Limpeza', c: 'Serviços', v: 800, d: '05' },
                 { f: 'Mastercont Contadores', c: 'Contabilidade', v: 370, d: '10' },
+                { f: 'BRK Saneamento', c: 'Água', v: 232.20, d: '19' }, // Projetado com o valor base de Março
                 { f: 'Aluguel Sala 603 (JK Business)', c: 'Infraestrutura', v: 2500, d: '23' },
-                { f: 'Pronto Fibra', c: 'Internet', v: 119.90, d: '25' }
+                { f: 'Pronto Fibra', c: 'Internet', v: 119.90, d: '25' },
+                { f: 'Energisa', c: 'Energia', v: 258.29, d: '26' } // Projetado com o valor base de Março
             ];
             
             let idCount = 5000;
@@ -467,7 +468,7 @@
             document.getElementById('modal-lancamento').classList.remove('hidden');
             if(id) {
                 document.getElementById('modal-titulo').innerText = "Editar Lançamento";
-                document.getElementById('box-recorrencia').style.display = 'none'; // Esconde na edição
+                document.getElementById('box-recorrencia').style.display = 'none'; 
                 
                 const item = database.find(i => i.id === id);
                 document.getElementById('inp-id').value = item.id;
@@ -483,7 +484,7 @@
                 document.getElementById('modal-titulo').innerText = "Novo Lançamento";
                 document.getElementById('form-lancamento').reset();
                 document.getElementById('inp-id').value = '';
-                document.getElementById('box-recorrencia').style.display = 'block'; // Mostra na criação
+                document.getElementById('box-recorrencia').style.display = 'block';
                 document.getElementById('div-parcelas').style.display = 'none';
             }
         }
@@ -501,7 +502,6 @@
             const partesVenc = dateVencStr.split('-');
             let dataBaseVencimento = new Date(partesVenc[0], partesVenc[1] - 1, partesVenc[2]);
 
-            // Se for Edição ou Cadastro Simples (Sem recorrência)
             if (idForm || !isRecorrente) {
                 const mesRef = `${partesVenc[1]}/${partesVenc[0]}`;
                 const dataVenc = `${partesVenc[2]}/${partesVenc[1]}/${partesVenc[0]}`;
@@ -527,7 +527,6 @@
                     database.push(dadosSalvos);
                 }
             } 
-            // NOVO: Processamento de Recorrência (Múltiplos meses)
             else {
                 for (let i = 0; i < qtdMeses; i++) {
                     let nVenc = new Date(dataBaseVencimento);
@@ -565,7 +564,6 @@
             popularFiltroAnalise();
         }
 
-        // Função de Duplicar Lançamento na própria tabela
         function duplicarLancamento(id) {
             const item = database.find(i => i.id === id);
             if(item) {
