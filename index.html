@@ -3,17 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BSC Advogados | ERP Financeiro</title>
+    <title>BSC Advogados | ERP Financeiro PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --bsc-verde: #004d2c; --bsc-dourado: #c5a36b; --bsc-bg: #f3f4f6; }
         body { background-color: var(--bsc-bg); font-family: 'Inter', system-ui, sans-serif; }
-        .tab-btn { transition: all 0.3s ease; }
+        .tab-btn { transition: all 0.3s ease; border-bottom: 3px solid transparent; }
         .tab-active { border-bottom: 3px solid var(--bsc-verde); color: var(--bsc-verde); font-weight: 700; }
-        .status-pago { background-color: #dcfce7; color: #166534; }
-        .status-pendente { background-color: #fef08a; color: #854d0e; }
-        .status-atrasado { background-color: #fee2e2; color: #991b1b; }
+        
+        /* Badges de Status */
+        .status-adiantado { background-color: #cffafe; color: #0891b2; } /* Ciano */
+        .status-pago { background-color: #dcfce7; color: #166534; } /* Verde */
+        .status-pendente { background-color: #fef08a; color: #854d0e; } /* Amarelo */
+        .status-atrasado { background-color: #fee2e2; color: #991b1b; } /* Vermelho */
+        
         .tipo-receita { color: #15803d; font-weight: bold; }
         .tipo-despesa { color: #b91c1c; font-weight: bold; }
         .login-bg { background: linear-gradient(135deg, #004d2c 0%, #002a18 100%); }
@@ -21,63 +25,75 @@
 </head>
 <body class="text-gray-800 antialiased">
 
-    <div id="modal-lancamento" class="fixed inset-0 bg-black bg-opacity-50 z-[200] hidden flex items-center justify-center p-4">
+    <div id="modal-lancamento" class="fixed inset-0 bg-black bg-opacity-60 z-[200] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
             <div class="bg-[#004d2c] px-6 py-4 flex justify-between items-center">
-                <h3 class="text-white font-bold text-lg">Novo Lançamento Financeiro</h3>
+                <h3 class="text-white font-bold text-lg" id="modal-titulo">Novo Lançamento</h3>
                 <button onclick="fecharModal()" class="text-white hover:text-gray-300 font-bold text-xl">&times;</button>
             </div>
             <form id="form-lancamento" onsubmit="salvarLancamento(event)" class="p-6 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
+                <input type="hidden" id="inp-id"> <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Tipo</label>
-                        <select id="inp-tipo" class="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-[#004d2c]">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo</label>
+                        <select id="inp-tipo" class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c] font-semibold">
                             <option value="Despesa">Despesa (Saída)</option>
                             <option value="Receita">Receita (Entrada)</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Valor (R$)</label>
-                        <input type="number" step="0.01" id="inp-valor" required class="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-[#004d2c]" placeholder="Ex: 1500.00">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
+                        <select id="inp-status" class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c] font-semibold">
+                            <option value="Pago">Pago no Prazo</option>
+                            <option value="Adiantado">Pago Adiantado</option>
+                            <option value="Pendente">Pendente (A Vencer)</option>
+                            <option value="Atrasado">Em Atraso / Pago Atrasado</option>
+                        </select>
                     </div>
                 </div>
+
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Descrição / Favorecido / Cliente</label>
-                    <input type="text" id="inp-descricao" required class="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-[#004d2c]" placeholder="Nome da pessoa ou empresa">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição / Favorecido</label>
+                    <input type="text" id="inp-descricao" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c]" placeholder="Ex: Energisa, BRK, Cliente X...">
                 </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Categoria</label>
-                        <input type="text" id="inp-categoria" required class="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-[#004d2c]" placeholder="Ex: Honorários, Impostos...">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Categoria</label>
+                        <input type="text" id="inp-categoria" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c]" placeholder="Ex: Energia, Honorários...">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Vencimento</label>
-                        <input type="date" id="inp-vencimento" required class="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-[#004d2c]">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data de Vencimento</label>
+                        <input type="date" id="inp-vencimento" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c]">
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Status</label>
-                    <select id="inp-status" class="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-[#004d2c]">
-                        <option value="Pago">Pago / Recebido</option>
-                        <option value="Pendente">Pendente</option>
-                    </select>
+
+                <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Valor Original (R$)</label>
+                        <input type="number" step="0.01" id="inp-valor" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c] text-lg font-mono" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-red-500 uppercase mb-1">Juros / Multa (R$)</label>
+                        <input type="number" step="0.01" id="inp-juros" class="w-full border border-red-300 rounded-lg p-2.5 outline-none focus:border-red-500 text-lg font-mono text-red-600" placeholder="0.00" value="0">
+                    </div>
                 </div>
-                <div class="pt-4 flex justify-end gap-3">
-                    <button type="button" onclick="fecharModal()" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-bold">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-[#004d2c] hover:bg-[#003820] text-white rounded-lg font-bold">Salvar Lançamento</button>
+
+                <div class="pt-4 flex justify-end gap-3 border-t">
+                    <button type="button" onclick="fecharModal()" class="px-5 py-2.5 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-bold transition">Cancelar</button>
+                    <button type="submit" class="px-5 py-2.5 bg-[#004d2c] hover:bg-[#003820] text-white rounded-lg font-bold transition shadow-md">Salvar Lançamento</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="login-screen" class="min-h-screen login-bg flex flex-col items-center justify-center px-4 fixed inset-0 z-[100] transition-opacity duration-500">
-        <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md text-center transform transition-all">
+    <div id="login-screen" class="min-h-screen login-bg flex flex-col items-center justify-center px-4 fixed inset-0 z-[100]">
+        <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md text-center">
             <img src="logo-bsc.png" alt="Logo BSC" class="h-24 mx-auto mb-6">
             <h2 class="text-2xl font-black text-[#004d2c] uppercase tracking-wider mb-1">Acesso Restrito</h2>
-            <p class="text-sm font-semibold text-[#c5a36b] tracking-widest uppercase mb-8">Controladoria Financeira</p>
+            <p class="text-sm font-semibold text-[#c5a36b] tracking-widest uppercase mb-8">Controladoria Financeira PRO</p>
             <div class="space-y-4">
                 <div>
-                    <input type="password" id="pwd-input" placeholder="Digite a senha de acesso" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#004d2c] focus:ring-0 outline-none transition text-center text-lg font-mono" onkeypress="handleEnter(event)">
+                    <input type="password" id="pwd-input" placeholder="Digite a senha" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#004d2c] focus:ring-0 outline-none text-center text-lg font-mono tracking-widest" onkeypress="handleEnter(event)">
                     <p id="login-error" class="text-red-500 text-xs font-bold mt-2 hidden">Senha incorreta.</p>
                 </div>
                 <button onclick="authenticate()" class="w-full bg-[#004d2c] hover:bg-[#003820] text-white font-bold py-3 px-4 rounded-xl transition shadow-lg uppercase tracking-wide">Acessar Sistema</button>
@@ -96,12 +112,13 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-6 text-sm font-medium">
-                    <button onclick="abrirModal()" class="bg-[#c5a36b] hover:bg-[#b08d55] text-white px-4 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
-                        <span>+</span> Lançar Entrada/Saída
+                    <button onclick="abrirModal()" class="bg-[#c5a36b] hover:bg-[#b08d55] text-white px-5 py-2.5 rounded-lg font-bold shadow-md transition flex items-center gap-2">
+                        <span class="text-lg leading-none">+</span> Lançamento
                     </button>
-                    <div class="flex gap-2 border-l pl-6 border-gray-200">
-                        <button onclick="changeView('dashboard')" id="btn-dashboard" class="tab-btn tab-active pb-1 px-2">Resumo</button>
-                        <button onclick="changeView('extrato')" id="btn-extrato" class="tab-btn pb-1 px-2 text-gray-500 hover:text-[#004d2c]">Livro Razão</button>
+                    <div class="flex gap-4 border-l pl-6 border-gray-200">
+                        <button onclick="changeView('dashboard')" id="btn-dashboard" class="tab-btn tab-active pb-1">Painel</button>
+                        <button onclick="changeView('extrato')" id="btn-extrato" class="tab-btn pb-1 text-gray-500 hover:text-[#004d2c]">Livro Razão</button>
+                        <button onclick="changeView('analise')" id="btn-analise" class="tab-btn pb-1 text-gray-500 hover:text-[#004d2c]">Análise de Custos</button>
                     </div>
                     <button onclick="logout()" class="ml-2 text-xs text-gray-400 hover:text-red-600 font-bold underline">Sair</button>
                 </div>
@@ -121,30 +138,28 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-green-600">
-                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Total Receitas (Entradas)</h3>
+                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Total Receitas</h3>
                         <p class="text-3xl font-black text-green-600" id="kpi-receitas">R$ 0,00</p>
                     </div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-red-600">
-                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Total Despesas (Saídas)</h3>
+                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Total Despesas (com Juros)</h3>
                         <p class="text-3xl font-black text-red-600" id="kpi-despesas">R$ 0,00</p>
                     </div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-[#004d2c]">
-                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Lucro Líquido do Mês</h3>
+                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Lucro Líquido</h3>
                         <p class="text-3xl font-black text-[#004d2c]" id="kpi-lucro">R$ 0,00</p>
                     </div>
                 </div>
 
                 <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                    <h2 class="text-lg font-bold text-[#004d2c] mb-6">Balanço: Receitas x Despesas</h2>
-                    <div class="h-[350px]">
-                        <canvas id="fluxoChart"></canvas>
-                    </div>
+                    <h2 class="text-lg font-bold text-[#004d2c] mb-6">Balanço Geral</h2>
+                    <div class="h-[350px]"><canvas id="fluxoChart"></canvas></div>
                 </div>
             </div>
 
             <div id="view-extrato" class="hidden space-y-6 animate-fade-in">
                 <div class="bg-white p-6 rounded-2xl shadow-sm flex justify-between items-center border border-gray-100">
-                    <h2 class="text-lg font-bold text-[#004d2c]">Livro Razão Analítico</h2>
+                    <h2 class="text-lg font-bold text-[#004d2c]">Livro Caixa Interativo</h2>
                     <select id="month-filter" onchange="renderTable()" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg p-2.5 outline-none font-bold">
                         <option value="Todos">Todos os Meses</option>
                         <option value="02/2026">Fevereiro / 2026</option>
@@ -154,23 +169,51 @@
                 </div>
 
                 <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-gray-600">
-                            <thead class="bg-gray-50 text-gray-700 uppercase font-bold text-xs border-b">
-                                <tr>
-                                    <th class="px-6 py-4">Tipo</th>
-                                    <th class="px-6 py-4">Vencimento</th>
-                                    <th class="px-6 py-4">Descrição / Cliente</th>
-                                    <th class="px-6 py-4">Categoria</th>
-                                    <th class="px-6 py-4 text-right">Valor (R$)</th>
-                                    <th class="px-6 py-4 text-center">Status</th>
-                                    <th class="px-6 py-4 text-center">Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-body" class="divide-y divide-gray-100">
-                                </tbody>
-                        </table>
+                    <table class="w-full text-left text-sm text-gray-600">
+                        <thead class="bg-gray-50 text-gray-700 uppercase font-bold text-xs border-b">
+                            <tr>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4">Vencimento</th>
+                                <th class="px-6 py-4">Favorecido / Cliente</th>
+                                <th class="px-6 py-4 text-right">Valor Original</th>
+                                <th class="px-6 py-4 text-right text-red-500">Juros/Multa</th>
+                                <th class="px-6 py-4 text-right font-black">Total Pago</th>
+                                <th class="px-6 py-4 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-gray-100">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-analise" class="hidden space-y-6 animate-fade-in">
+                <div class="bg-white p-6 rounded-2xl shadow-sm flex justify-between items-center border border-gray-100 border-l-8 border-l-[#c5a36b]">
+                    <div>
+                        <h2 class="text-lg font-bold text-[#004d2c]">Inteligência Analítica (Comparativo)</h2>
+                        <p class="text-xs text-gray-500">Compare a evolução de gastos recorrentes ao longo dos meses.</p>
                     </div>
+                    <select id="analise-favorecido" onchange="gerarAnalise()" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 outline-none font-bold min-w-[200px]">
+                        </select>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm">
+                        <h3 class="text-xs text-gray-400 uppercase font-bold mb-1">Média Mensal</h3>
+                        <p class="text-2xl font-black text-gray-800" id="analise-media">R$ 0,00</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm">
+                        <h3 class="text-xs text-gray-400 uppercase font-bold mb-1">Maior Fatura</h3>
+                        <p class="text-2xl font-black text-red-600" id="analise-pico">R$ 0,00</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm">
+                        <h3 class="text-xs text-gray-400 uppercase font-bold mb-1">Tendência (Último Mês)</h3>
+                        <p class="text-2xl font-black" id="analise-tendencia">--</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="h-[300px]"><canvas id="analiseChart"></canvas></div>
                 </div>
             </div>
         </main>
@@ -178,13 +221,11 @@
 
     <script>
         // ==========================================
-        // 1. SISTEMA DE AUTENTICAÇÃO
+        // 1. AUTENTICAÇÃO
         // ==========================================
         const SECRET_KEY = "BSCADV";
-        
         function checkAuthStatus() { if (sessionStorage.getItem('bsc_auth') === 'true') unlockDashboard(); }
         function handleEnter(e) { if (e.key === 'Enter') authenticate(); }
-        
         function authenticate() {
             if (document.getElementById('pwd-input').value === SECRET_KEY) {
                 sessionStorage.setItem('bsc_auth', 'true');
@@ -192,142 +233,149 @@
                 unlockDashboard();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
-                document.getElementById('pwd-input').value = '';
             }
         }
-
         function unlockDashboard() {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-content').classList.remove('hidden');
             setTimeout(() => document.getElementById('app-content').classList.remove('opacity-0'), 50);
-            inicializarBancoDeDados();
+            inicializarBD();
         }
-
         function logout() { sessionStorage.removeItem('bsc_auth'); window.location.reload(); }
         window.onload = checkAuthStatus;
 
         // ==========================================
-        // 2. BANCO DE DADOS LOCAL (LocalStorage)
+        // 2. BANCO DE DADOS LOCAL
         // ==========================================
         let database = [];
-        let chartInstance = null;
+        let chartFluxo = null;
+        let chartAnalise = null;
 
         const defaultData = [
-            // FEV
-            { id: 1, tipo: 'Despesa', mes: '02/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, vencimento: '05/02/2026', status: 'Pago' },
-            { id: 2, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, vencimento: '05/02/2026', status: 'Pago' },
-            { id: 3, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, vencimento: '05/02/2026', status: 'Pago' },
-            { id: 4, tipo: 'Despesa', mes: '02/2026', favorecido: 'Limpeza (Seg/Qui)', categoria: 'Serviços', valor: 800.00, vencimento: '05/02/2026', status: 'Pago' },
-            { id: 5, tipo: 'Despesa', mes: '02/2026', favorecido: 'Aluguel (Sala 603)', categoria: 'Infraestrutura', valor: 2500.00, vencimento: '23/02/2026', status: 'Pago' },
-            { id: 6, tipo: 'Despesa', mes: '02/2026', favorecido: 'Mastercont', categoria: 'Contabilidade', valor: 370.00, vencimento: '10/02/2026', status: 'Pago' },
-            { id: 7, tipo: 'Despesa', mes: '02/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 313.73, vencimento: '26/02/2026', status: 'Pago' },
-            { id: 8, tipo: 'Despesa', mes: '02/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 208.45, vencimento: '19/02/2026', status: 'Pago' },
-            { id: 9, tipo: 'Despesa', mes: '02/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 122.77, vencimento: '25/02/2026', status: 'Pago' },
-
-            // MARÇO (Atual)
-            { id: 10, tipo: 'Despesa', mes: '03/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, vencimento: '05/03/2026', status: 'Pago' },
-            { id: 11, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, vencimento: '05/03/2026', status: 'Pago' },
-            { id: 12, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, vencimento: '05/03/2026', status: 'Pago' },
-            { id: 13, tipo: 'Despesa', mes: '03/2026', favorecido: 'Limpeza (Seg/Qui)', categoria: 'Serviços', valor: 800.00, vencimento: '05/03/2026', status: 'Pago' },
-            { id: 14, tipo: 'Despesa', mes: '03/2026', favorecido: 'Aluguel (Sala 603)', categoria: 'Infraestrutura', valor: 2500.00, vencimento: '23/03/2026', status: 'Pendente' },
-            { id: 15, tipo: 'Despesa', mes: '03/2026', favorecido: 'Mastercont', categoria: 'Contabilidade', valor: 370.00, vencimento: '10/03/2026', status: 'Pago' },
-            { id: 16, tipo: 'Despesa', mes: '03/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 258.29, vencimento: '26/03/2026', status: 'Pendente' },
-            { id: 17, tipo: 'Despesa', mes: '03/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 232.20, vencimento: '19/03/2026', status: 'Atrasado' },
-            { id: 18, tipo: 'Despesa', mes: '03/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, vencimento: '25/03/2026', status: 'Pago' },
-            { id: 19, tipo: 'Despesa', mes: '03/2026', favorecido: 'DAS (Apur. Fev)', categoria: 'Impostos', valor: 549.01, vencimento: '20/03/2026', status: 'Atrasado' },
-            { id: 20, tipo: 'Despesa', mes: '03/2026', favorecido: 'DAS (Parc. 7/17)', categoria: 'Impostos', valor: 341.57, vencimento: '31/03/2026', status: 'Pendente' },
-            { id: 21, tipo: 'Despesa', mes: '03/2026', favorecido: 'DAS (Parc. 8/17)', categoria: 'Impostos', valor: 341.57, vencimento: '31/03/2026', status: 'Pendente' },
-
-            // ABRIL (Projeção)
-            { id: 22, tipo: 'Despesa', mes: '04/2026', favorecido: 'Aluguel (Sala 603)', categoria: 'Infraestrutura', valor: 2500.00, vencimento: '23/04/2026', status: 'Pendente' }
+            { id: 101, tipo: 'Despesa', mes: '02/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 313.73, juros: 0, vencimento: '26/02/2026', status: 'Pago' },
+            { id: 102, tipo: 'Despesa', mes: '02/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 208.45, juros: 0, vencimento: '19/02/2026', status: 'Pago' },
+            { id: 103, tipo: 'Despesa', mes: '03/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 258.29, juros: 0, vencimento: '26/03/2026', status: 'Pendente' },
+            { id: 104, tipo: 'Despesa', mes: '03/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 232.20, juros: 15.50, vencimento: '19/03/2026', status: 'Atrasado' }, // Exemplo com juros
+            { id: 105, tipo: 'Despesa', mes: '03/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/03/2026', status: 'Adiantado' },
+            { id: 106, tipo: 'Despesa', mes: '03/2026', favorecido: 'Mastercont', categoria: 'Contabilidade', valor: 370.00, juros: 0, vencimento: '10/03/2026', status: 'Pago' },
+            { id: 107, tipo: 'Despesa', mes: '03/2026', favorecido: 'Aluguel (Sala 603)', categoria: 'Infraestrutura', valor: 2500.00, juros: 0, vencimento: '23/03/2026', status: 'Pendente' },
+            { id: 108, tipo: 'Despesa', mes: '03/2026', favorecido: 'Iago Manguary', categoria: 'Controller', valor: 1800.00, juros: 0, vencimento: '05/03/2026', status: 'Pago' }
         ];
 
-        function inicializarBancoDeDados() {
-            const dbSalvo = localStorage.getItem('bsc_db');
+        function inicializarBD() {
+            const dbSalvo = localStorage.getItem('bsc_db_pro');
             if (dbSalvo) {
                 database = JSON.parse(dbSalvo);
+                // Atualização de segurança para dados antigos
+                database.forEach(item => { if(item.juros === undefined) item.juros = 0; });
             } else {
-                database = defaultData; // Carrega os dados fixos na primeira vez
-                localStorage.setItem('bsc_db', JSON.stringify(database));
+                database = defaultData;
+                salvarBD();
             }
             calcularDashboard();
             renderTable();
+            popularFiltroAnalise();
+        }
+        function salvarBD() { localStorage.setItem('bsc_db_pro', JSON.stringify(database)); }
+
+        // ==========================================
+        // 3. INTERFACE E NAVEGAÇÃO
+        // ==========================================
+        const formatCurrency = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+
+        function changeView(view) {
+            ['dashboard', 'extrato', 'analise'].forEach(v => {
+                document.getElementById('view-' + v).style.display = v === view ? 'block' : 'none';
+                document.getElementById('btn-' + v).className = v === view ? 'tab-btn tab-active pb-1' : 'tab-btn pb-1 text-gray-500 hover:text-[#004d2c]';
+            });
+            if(view === 'analise') gerarAnalise();
         }
 
         // ==========================================
-        // 3. LÓGICA DE INSERÇÃO E EXCLUSÃO
+        // 4. CRUD (CRIAR, EDITAR, EXCLUIR)
         // ==========================================
-        function abrirModal() { document.getElementById('modal-lancamento').classList.remove('hidden'); }
-        function fecharModal() { document.getElementById('modal-lancamento').classList.add('hidden'); document.getElementById('form-lancamento').reset(); }
+        function abrirModal(id = null) {
+            document.getElementById('modal-lancamento').classList.remove('hidden');
+            if(id) {
+                document.getElementById('modal-titulo').innerText = "Editar Lançamento";
+                const item = database.find(i => i.id === id);
+                document.getElementById('inp-id').value = item.id;
+                document.getElementById('inp-tipo').value = item.tipo;
+                document.getElementById('inp-status').value = item.status;
+                document.getElementById('inp-descricao').value = item.favorecido;
+                document.getElementById('inp-categoria').value = item.categoria;
+                document.getElementById('inp-vencimento').value = item.vencimento.split('/').reverse().join('-');
+                document.getElementById('inp-valor').value = item.valor;
+                document.getElementById('inp-juros').value = item.juros || 0;
+            } else {
+                document.getElementById('modal-titulo').innerText = "Novo Lançamento";
+                document.getElementById('form-lancamento').reset();
+                document.getElementById('inp-id').value = '';
+                document.getElementById('inp-juros').value = 0;
+            }
+        }
+
+        function fecharModal() { document.getElementById('modal-lancamento').classList.add('hidden'); }
 
         function salvarLancamento(e) {
             e.preventDefault();
-            
-            // Extrai o mês/ano da data (Ex: "2026-03-25" -> "03/2026")
+            const idForm = document.getElementById('inp-id').value;
             const dateStr = document.getElementById('inp-vencimento').value;
             const partes = dateStr.split('-');
             const mesRef = `${partes[1]}/${partes[0]}`;
             const dataVenc = `${partes[2]}/${partes[1]}/${partes[0]}`;
 
-            const novoItem = {
-                id: Date.now(), // ID único
+            const dadosSalvos = {
                 tipo: document.getElementById('inp-tipo').value,
                 mes: mesRef,
                 favorecido: document.getElementById('inp-descricao').value,
                 categoria: document.getElementById('inp-categoria').value,
                 valor: parseFloat(document.getElementById('inp-valor').value),
+                juros: parseFloat(document.getElementById('inp-juros').value) || 0,
                 vencimento: dataVenc,
                 status: document.getElementById('inp-status').value
             };
 
-            database.push(novoItem);
-            localStorage.setItem('bsc_db', JSON.stringify(database)); // Salva no navegador
-            
-            fecharModal();
-            calcularDashboard();
-            renderTable();
+            if(idForm) { // Editar existente
+                const index = database.findIndex(i => i.id == idForm);
+                database[index] = { ...database[index], ...dadosSalvos };
+            } else { // Criar novo
+                dadosSalvos.id = Date.now();
+                database.push(dadosSalvos);
+            }
+
+            salvarBD(); fecharModal(); calcularDashboard(); renderTable(); popularFiltroAnalise();
         }
 
         function excluirLancamento(id) {
-            if(confirm('Tem certeza que deseja excluir este lançamento?')) {
+            if(confirm('Tem certeza que deseja apagar este registro do Livro Caixa?')) {
                 database = database.filter(item => item.id !== id);
-                localStorage.setItem('bsc_db', JSON.stringify(database));
-                calcularDashboard();
-                renderTable();
+                salvarBD(); calcularDashboard(); renderTable(); popularFiltroAnalise();
             }
         }
 
         // ==========================================
-        // 4. LÓGICA DE INTERFACE E CÁLCULOS
+        // 5. RENDERIZAÇÃO E GRÁFICOS
         // ==========================================
-        const formatCurrency = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
-
-        function changeView(view) {
-            document.getElementById('view-dashboard').style.display = view === 'dashboard' ? 'block' : 'none';
-            document.getElementById('view-extrato').style.display = view === 'extrato' ? 'block' : 'none';
-            document.getElementById('btn-dashboard').className = view === 'dashboard' ? 'tab-btn tab-active pb-1 px-2' : 'tab-btn pb-1 px-2 text-gray-500 hover:text-[#004d2c]';
-            document.getElementById('btn-extrato').className = view === 'extrato' ? 'tab-btn tab-active pb-1 px-2' : 'tab-btn pb-1 px-2 text-gray-500 hover:text-[#004d2c]';
-        }
-
         function calcularDashboard() {
             const mesSel = document.getElementById('dash-month-filter').value;
-            let totReceitas = 0, totDespesas = 0;
+            let totRec = 0, totDesp = 0;
 
             database.forEach(item => {
                 if(item.mes === mesSel) {
-                    if(item.tipo === 'Receita') totReceitas += item.valor;
-                    if(item.tipo === 'Despesa') totDespesas += item.valor;
+                    const valorTotalItem = item.valor + (item.juros || 0);
+                    if(item.tipo === 'Receita') totRec += valorTotalItem;
+                    if(item.tipo === 'Despesa') totDesp += valorTotalItem;
                 }
             });
 
-            document.getElementById('kpi-receitas').innerText = formatCurrency(totReceitas);
-            document.getElementById('kpi-despesas').innerText = formatCurrency(totDespesas);
-            document.getElementById('kpi-lucro').innerText = formatCurrency(totReceitas - totDespesas);
-            
-            // Cor do lucro (Vermelho se negativo, Verde se positivo)
-            document.getElementById('kpi-lucro').className = (totReceitas - totDespesas) < 0 ? "text-3xl font-black text-red-600" : "text-3xl font-black text-[#004d2c]";
+            document.getElementById('kpi-receitas').innerText = formatCurrency(totRec);
+            document.getElementById('kpi-despesas').innerText = formatCurrency(totDesp);
+            const lucro = totRec - totDesp;
+            document.getElementById('kpi-lucro').innerText = formatCurrency(lucro);
+            document.getElementById('kpi-lucro').className = lucro < 0 ? "text-3xl font-black text-red-600" : "text-3xl font-black text-[#004d2c]";
 
-            atualizarGrafico();
+            atualizarGraficoFluxo();
         }
 
         function renderTable() {
@@ -336,29 +384,32 @@
             tbody.innerHTML = '';
 
             let filteredData = mesSel === 'Todos' ? database : database.filter(item => item.mes === mesSel);
-
-            // Ordena por data (mais recente primeiro)
             filteredData.sort((a, b) => b.id - a.id);
 
             filteredData.forEach(item => {
-                const corTipo = item.tipo === 'Receita' ? 'tipo-receita' : 'tipo-despesa';
-                const sinal = item.tipo === 'Receita' ? '+' : '-';
+                const isRec = item.tipo === 'Receita';
+                const corTipo = isRec ? 'tipo-receita' : 'tipo-despesa';
+                const total = item.valor + (item.juros || 0);
                 
-                let badgeStatus = '';
-                if(item.status === 'Pago') badgeStatus = `<span class="px-2 py-1 rounded-md text-xs font-bold status-pago">Baixado</span>`;
-                if(item.status === 'Pendente') badgeStatus = `<span class="px-2 py-1 rounded-md text-xs font-bold status-pendente">A Vencer</span>`;
-                if(item.status === 'Atrasado') badgeStatus = `<span class="px-2 py-1 rounded-md text-xs font-bold status-atrasado">Atrasado</span>`;
+                let bStatus = '';
+                if(item.status === 'Pago') bStatus = `<span class="px-3 py-1 rounded-full text-[10px] uppercase font-bold status-pago">Pago</span>`;
+                if(item.status === 'Adiantado') bStatus = `<span class="px-3 py-1 rounded-full text-[10px] uppercase font-bold status-adiantado">Adiantado</span>`;
+                if(item.status === 'Pendente') bStatus = `<span class="px-3 py-1 rounded-full text-[10px] uppercase font-bold status-pendente">Pendente</span>`;
+                if(item.status === 'Atrasado') bStatus = `<span class="px-3 py-1 rounded-full text-[10px] uppercase font-bold status-atrasado">Atrasado</span>`;
+
+                const strJuros = item.juros > 0 ? `<span class="text-red-500 font-bold text-xs">+ ${formatCurrency(item.juros)}</span>` : `<span class="text-gray-300">-</span>`;
 
                 const row = `
                     <tr class="hover:bg-gray-50 border-b border-gray-100 transition">
-                        <td class="px-6 py-4 ${corTipo} uppercase text-xs tracking-wider">${item.tipo}</td>
-                        <td class="px-6 py-4 font-mono text-sm">${item.vencimento}</td>
-                        <td class="px-6 py-4 font-bold text-gray-900">${item.favorecido}</td>
-                        <td class="px-6 py-4 text-xs bg-gray-50 rounded">${item.categoria}</td>
-                        <td class="px-6 py-4 text-right font-mono font-bold ${corTipo}">${sinal} ${formatCurrency(item.valor)}</td>
-                        <td class="px-6 py-4 text-center">${badgeStatus}</td>
-                        <td class="px-6 py-4 text-center">
-                            <button onclick="excluirLancamento(${item.id})" class="text-red-400 hover:text-red-600 font-bold text-xs underline">Apagar</button>
+                        <td class="px-6 py-4 text-center">${bStatus}</td>
+                        <td class="px-6 py-4 font-mono text-xs">${item.vencimento}</td>
+                        <td class="px-6 py-4 font-bold text-gray-900">${item.favorecido} <br><span class="text-[10px] font-normal text-gray-400 uppercase tracking-widest">${item.categoria}</span></td>
+                        <td class="px-6 py-4 text-right font-mono text-sm">${formatCurrency(item.valor)}</td>
+                        <td class="px-6 py-4 text-right">${isRec ? '-' : strJuros}</td>
+                        <td class="px-6 py-4 text-right font-mono font-black ${corTipo} text-base">${isRec ? '+' : '-'} ${formatCurrency(total)}</td>
+                        <td class="px-6 py-4 text-center space-x-3">
+                            <button onclick="abrirModal(${item.id})" class="text-blue-500 hover:text-blue-700 font-bold text-xs uppercase tracking-wider">Editar</button>
+                            <button onclick="excluirLancamento(${item.id})" class="text-red-400 hover:text-red-600 font-bold text-xs uppercase tracking-wider">Apagar</button>
                         </td>
                     </tr>
                 `;
@@ -366,23 +417,100 @@
             });
         }
 
-        function atualizarGrafico() {
-            if (chartInstance) chartInstance.destroy();
-            
-            // Agrupa dados para os últimos meses
+        // ==========================================
+        // 6. MÓDULO DE INTELIGÊNCIA (ANÁLISE)
+        // ==========================================
+        function popularFiltroAnalise() {
+            const select = document.getElementById('analise-favorecido');
+            const favorecidos = [...new Set(database.filter(i => i.tipo === 'Despesa').map(i => i.favorecido))];
+            select.innerHTML = '';
+            favorecidos.sort().forEach(fav => {
+                select.insertAdjacentHTML('beforeend', `<option value="${fav}">${fav}</option>`);
+            });
+        }
+
+        function gerarAnalise() {
+            const favSel = document.getElementById('analise-favorecido').value;
+            if(!favSel) return;
+
+            // Pega todo o histórico desse fornecedor, soma o valor+juros, ordena por data (mês)
+            let historico = database.filter(i => i.favorecido === favSel).map(i => {
+                return { mesRaw: i.mes, valTotal: i.valor + (i.juros || 0) };
+            });
+
+            // Ordena cronologicamente os meses (MM/YYYY)
+            historico.sort((a,b) => {
+                const [mA, yA] = a.mesRaw.split('/');
+                const [mB, yB] = b.mesRaw.split('/');
+                return new Date(yA, mA-1) - new Date(yB, mB-1);
+            });
+
+            const labels = historico.map(i => i.mesRaw);
+            const dataPts = historico.map(i => i.valTotal);
+
+            // Calcula KPIs
+            if(dataPts.length > 0) {
+                const media = dataPts.reduce((a,b) => a+b, 0) / dataPts.length;
+                const max = Math.max(...dataPts);
+                document.getElementById('analise-media').innerText = formatCurrency(media);
+                document.getElementById('analise-pico').innerText = formatCurrency(max);
+
+                if(dataPts.length > 1) {
+                    const ult = dataPts[dataPts.length-1];
+                    const penult = dataPts[dataPts.length-2];
+                    const diff = ((ult - penult) / penult) * 100;
+                    
+                    const elTend = document.getElementById('analise-tendencia');
+                    if(diff > 0) {
+                        elTend.innerHTML = `<span class="text-red-600">▲ Subiu ${diff.toFixed(1)}%</span>`;
+                    } else if (diff < 0) {
+                        elTend.innerHTML = `<span class="text-green-600">▼ Caiu ${Math.abs(diff).toFixed(1)}%</span>`;
+                    } else {
+                        elTend.innerHTML = `<span class="text-gray-500">■ Estável</span>`;
+                    }
+                } else {
+                    document.getElementById('analise-tendencia').innerText = "Sem histórico anterior";
+                }
+            }
+
+            if(chartAnalise) chartAnalise.destroy();
+            const ctx = document.getElementById('analiseChart').getContext('2d');
+            chartAnalise = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `Evolução de Gastos: ${favSel}`,
+                        data: dataPts,
+                        borderColor: '#c5a36b',
+                        backgroundColor: 'rgba(197, 163, 107, 0.2)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#004d2c',
+                        pointRadius: 5,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function atualizarGraficoFluxo() {
+            if (chartFluxo) chartFluxo.destroy();
             const meses = ['02/2026', '03/2026', '04/2026'];
             let recData = [0,0,0], desData = [0,0,0];
 
             database.forEach(item => {
                 const idx = meses.indexOf(item.mes);
                 if(idx > -1) {
-                    if(item.tipo === 'Receita') recData[idx] += item.valor;
-                    if(item.tipo === 'Despesa') desData[idx] += item.valor;
+                    const val = item.valor + (item.juros || 0);
+                    if(item.tipo === 'Receita') recData[idx] += val;
+                    if(item.tipo === 'Despesa') desData[idx] += val;
                 }
             });
 
             const ctx = document.getElementById('fluxoChart').getContext('2d');
-            chartInstance = new Chart(ctx, {
+            chartFluxo = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: ['Fev/26', 'Mar/26', 'Abr/26'],
@@ -391,10 +519,7 @@
                         { label: 'Despesas', data: desData, backgroundColor: '#b91c1c', borderRadius: 4 }
                     ]
                 },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { position: 'top' } }
-                }
+                options: { responsive: true, maintainAspectRatio: false }
             });
         }
     </script>
