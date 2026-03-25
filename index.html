@@ -25,7 +25,7 @@
 <body class="text-gray-800 antialiased">
 
     <div id="modal-lancamento" class="fixed inset-0 bg-black bg-opacity-60 z-[200] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[95vh] overflow-y-auto">
             <div class="bg-[#004d2c] px-6 py-4 flex justify-between items-center">
                 <h3 class="text-white font-bold text-lg" id="modal-titulo">Novo Lançamento</h3>
                 <button onclick="fecharModal()" class="text-white hover:text-gray-300 font-bold text-xl">&times;</button>
@@ -42,11 +42,11 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status (1ª Parcela)</label>
                         <select id="inp-status" class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c] font-semibold">
                             <option value="Pago">Pago no Prazo</option>
                             <option value="Adiantado">Pago Adiantado</option>
-                            <option value="Pendente">Pendente (A Vencer)</option>
+                            <option value="Pendente" selected>Pendente (A Vencer)</option>
                             <option value="Atrasado">Em Atraso / Pago Atrasado</option>
                         </select>
                     </div>
@@ -55,7 +55,7 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="col-span-2 md:col-span-1">
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição / Favorecido</label>
-                        <input type="text" id="inp-descricao" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c]" placeholder="Ex: Energisa, BRK, Cliente X...">
+                        <input type="text" id="inp-descricao" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c]" placeholder="Ex: Energisa, Honorários Cliente X...">
                     </div>
                     <div class="col-span-2 md:col-span-1">
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Categoria</label>
@@ -69,7 +69,7 @@
                         <input type="date" id="inp-vencimento" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#004d2c]">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-[#004d2c] uppercase mb-1">Data de Pagamento</label>
+                        <label class="block text-xs font-bold text-[#004d2c] uppercase mb-1">Data de Pagamento Real</label>
                         <input type="date" id="inp-pagamento" class="w-full border border-[#004d2c] rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-[#004d2c] bg-green-50">
                     </div>
                 </div>
@@ -85,7 +85,21 @@
                     </div>
                 </div>
 
-                <div class="pt-4 flex justify-end gap-3 border-t">
+                <div id="box-recorrencia" class="col-span-2 bg-blue-50 p-4 rounded-xl border border-blue-200">
+                    <label class="block text-xs font-bold text-blue-800 uppercase mb-1">Criar Recorrência Automática?</label>
+                    <div class="flex gap-4 items-center">
+                        <select id="inp-recorrencia" onchange="toggleRecorrencia()" class="w-1/2 border border-gray-300 rounded-lg p-2.5 outline-none focus:border-blue-600 font-semibold text-blue-900">
+                            <option value="1">Não (Lançamento Único)</option>
+                            <option value="multiplo">Sim (Repetir Mensalmente)</option>
+                        </select>
+                        <div id="div-parcelas" class="hidden w-1/2 flex items-center gap-2">
+                            <span class="text-xs font-bold text-blue-800">Quantos meses?</span>
+                            <input type="number" id="inp-parcelas" min="2" max="120" value="12" class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-blue-600">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end gap-3 border-t mt-2">
                     <button type="button" onclick="fecharModal()" class="px-5 py-2.5 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-bold transition">Cancelar</button>
                     <button type="submit" class="px-5 py-2.5 bg-[#004d2c] hover:bg-[#003820] text-white rounded-lg font-bold transition shadow-md">Salvar Registro</button>
                 </div>
@@ -134,20 +148,18 @@
         </nav>
 
         <main class="container mx-auto py-8 px-6">
-            
             <div id="view-dashboard" class="block space-y-8 animate-fade-in">
                 <div class="flex justify-end">
-                    <select id="dash-month-filter" onchange="calcularDashboard()" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2 font-bold shadow-sm outline-none">
-                    </select>
+                    <select id="dash-month-filter" onchange="calcularDashboard()" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2 font-bold shadow-sm outline-none"></select>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-green-600">
-                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Total Receitas (Entradas)</h3>
+                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Total Receitas</h3>
                         <p class="text-3xl font-black text-green-600" id="kpi-receitas">R$ 0,00</p>
                     </div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-red-600">
-                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Total Despesas (com Juros)</h3>
+                        <h3 class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Total Despesas</h3>
                         <p class="text-3xl font-black text-red-600" id="kpi-despesas">R$ 0,00</p>
                     </div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-[#004d2c]">
@@ -167,8 +179,7 @@
                     <h2 class="text-lg font-bold text-[#004d2c]">Livro Caixa (Competência)</h2>
                     <div class="flex gap-4 w-full md:w-auto">
                         <input type="text" id="busca-extrato" onkeyup="pesquisarTabela('table-body', 'busca-extrato')" placeholder="🔍 Buscar lançamento..." class="w-full md:w-64 border border-gray-200 rounded-lg p-2.5 outline-none focus:border-[#004d2c] text-sm">
-                        <select id="month-filter" onchange="renderTable()" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg p-2.5 outline-none font-bold">
-                        </select>
+                        <select id="month-filter" onchange="renderTable()" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg p-2.5 outline-none font-bold"></select>
                     </div>
                 </div>
 
@@ -180,14 +191,11 @@
                                 <th class="px-6 py-4">Vencimento</th>
                                 <th class="px-6 py-4 text-[#004d2c]">Pagamento</th>
                                 <th class="px-6 py-4">Favorecido / Cliente</th>
-                                <th class="px-6 py-4 text-right">Valor Original</th>
-                                <th class="px-6 py-4 text-right text-red-500">Juros/Multa</th>
-                                <th class="px-6 py-4 text-right font-black">Total</th>
+                                <th class="px-6 py-4 text-right font-black">Total (c/ juros)</th>
                                 <th class="px-6 py-4 text-center">Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="table-body" class="divide-y divide-gray-100">
-                            </tbody>
+                        <tbody id="table-body" class="divide-y divide-gray-100"></tbody>
                     </table>
                 </div>
             </div>
@@ -196,12 +204,11 @@
                 <div class="bg-white p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center border border-gray-100 border-l-8 border-l-green-600 gap-4">
                     <div>
                         <h2 class="text-lg font-bold text-[#004d2c]">Relatório de Pagamentos Efetuados</h2>
-                        <p class="text-xs text-gray-500">Filtrado exclusivamente pela data real em que o dinheiro saiu do caixa.</p>
+                        <p class="text-xs text-gray-500">Filtrado exclusivamente pela data real em que o dinheiro saiu.</p>
                     </div>
                     <div class="flex gap-4 w-full md:w-auto">
                         <input type="text" id="busca-relatorio" onkeyup="pesquisarTabela('relatorio-body', 'busca-relatorio')" placeholder="🔍 Buscar pagamento..." class="w-full md:w-64 border border-gray-200 rounded-lg p-2.5 outline-none focus:border-[#004d2c] text-sm">
-                        <select id="relatorio-mes" onchange="gerarRelatorio()" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg p-2.5 outline-none font-bold min-w-[200px]">
-                        </select>
+                        <select id="relatorio-mes" onchange="gerarRelatorio()" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg p-2.5 outline-none font-bold min-w-[200px]"></select>
                     </div>
                 </div>
 
@@ -214,16 +221,13 @@
                     <table class="w-full text-left text-sm text-gray-600">
                         <thead class="bg-gray-50 text-gray-700 uppercase font-bold text-xs border-b">
                             <tr>
-                                <th class="px-6 py-4 text-[#004d2c]">Data do Pagamento</th>
+                                <th class="px-6 py-4 text-[#004d2c]">Data Pagamento</th>
                                 <th class="px-6 py-4">Ref. / Vencimento</th>
                                 <th class="px-6 py-4">Favorecido / Categoria</th>
-                                <th class="px-6 py-4 text-right">Valor Original</th>
-                                <th class="px-6 py-4 text-right text-red-500">Juros/Multa</th>
                                 <th class="px-6 py-4 text-right font-black">Total Pago</th>
                             </tr>
                         </thead>
-                        <tbody id="relatorio-body" class="divide-y divide-gray-100">
-                            </tbody>
+                        <tbody id="relatorio-body" class="divide-y divide-gray-100"></tbody>
                     </table>
                 </div>
             </div>
@@ -232,10 +236,8 @@
                 <div class="bg-white p-6 rounded-2xl shadow-sm flex justify-between items-center border border-gray-100 border-l-8 border-l-[#c5a36b]">
                     <div>
                         <h2 class="text-lg font-bold text-[#004d2c]">Inteligência Analítica (Comparativo)</h2>
-                        <p class="text-xs text-gray-500">Compare a evolução de gastos recorrentes ao longo dos meses.</p>
                     </div>
-                    <select id="analise-favorecido" onchange="gerarAnalise()" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 outline-none font-bold min-w-[200px]">
-                    </select>
+                    <select id="analise-favorecido" onchange="gerarAnalise()" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 outline-none font-bold min-w-[200px]"></select>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -261,9 +263,6 @@
     </div>
 
     <script>
-        // ==========================================
-        // 1. AUTENTICAÇÃO
-        // ==========================================
         const SECRET_KEY = "BSCADV";
         function checkAuthStatus() { if (sessionStorage.getItem('bsc_auth') === 'true') unlockDashboard(); }
         function handleEnter(e) { if (e.key === 'Enter') authenticate(); }
@@ -272,9 +271,7 @@
                 sessionStorage.setItem('bsc_auth', 'true');
                 document.getElementById('login-error').classList.add('hidden');
                 unlockDashboard();
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
+            } else { document.getElementById('login-error').classList.remove('hidden'); }
         }
         function unlockDashboard() {
             document.getElementById('login-screen').style.display = 'none';
@@ -286,58 +283,82 @@
         window.onload = checkAuthStatus;
 
         // ==========================================
-        // 2. BASE DE DADOS LOCAL (V7 - Histórico Completo Energisa)
+        // 2. BASE DE DADOS (V8 - Projeção 2026 e Recorrência)
         // ==========================================
         let database = [];
         let chartFluxo = null;
         let chartAnalise = null;
 
-        const DB_KEY = 'bsc_erp_db_v7';
+        const DB_KEY = 'bsc_erp_db_v8';
 
-        const defaultData = [
-            // HISTÓRICO HOSTINGER
-            { id: 301, tipo: 'Despesa', mes: '08/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 29.99, juros: 0, vencimento: '24/08/2025', pagamento: '24/08/2025', status: 'Pago' },
-            { id: 302, tipo: 'Despesa', mes: '09/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 29.99, juros: 0, vencimento: '24/09/2025', pagamento: '24/09/2025', status: 'Pago' },
-            { id: 303, tipo: 'Despesa', mes: '10/2025', favorecido: 'Hostinger (E-mail)', categoria: 'Software / TI', valor: 41.88, juros: 0, vencimento: '16/10/2025', pagamento: '16/10/2025', status: 'Pago' },
-            { id: 304, tipo: 'Despesa', mes: '10/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 287.88, juros: 0, vencimento: '29/10/2025', pagamento: '29/10/2025', status: 'Pago' },
-            { id: 305, tipo: 'Despesa', mes: '11/2025', favorecido: 'Hostinger (E-mail)', categoria: 'Software / TI', valor: 88.78, juros: 0, vencimento: '12/11/2025', pagamento: '12/11/2025', status: 'Pago' },
+        // Geração automática dos dados iniciais e projeção de 2026
+        const defaultData = (function() {
+            let data = [
+                // Histórico Hostinger
+                { id: 301, tipo: 'Despesa', mes: '08/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 29.99, juros: 0, vencimento: '24/08/2025', pagamento: '24/08/2025', status: 'Pago' },
+                { id: 302, tipo: 'Despesa', mes: '09/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 29.99, juros: 0, vencimento: '24/09/2025', pagamento: '24/09/2025', status: 'Pago' },
+                { id: 303, tipo: 'Despesa', mes: '10/2025', favorecido: 'Hostinger (E-mail)', categoria: 'Software / TI', valor: 41.88, juros: 0, vencimento: '16/10/2025', pagamento: '16/10/2025', status: 'Pago' },
+                { id: 304, tipo: 'Despesa', mes: '10/2025', favorecido: 'Hostinger (Web Hosting)', categoria: 'Software / TI', valor: 287.88, juros: 0, vencimento: '29/10/2025', pagamento: '29/10/2025', status: 'Pago' },
+                { id: 305, tipo: 'Despesa', mes: '11/2025', favorecido: 'Hostinger (E-mail)', categoria: 'Software / TI', valor: 88.78, juros: 0, vencimento: '12/11/2025', pagamento: '12/11/2025', status: 'Pago' },
+                // Histórico Pronto Fibra / BRK / Energisa antigos
+                { id: 401, tipo: 'Despesa', mes: '08/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 50.27, juros: 1.20, vencimento: '25/08/2025', pagamento: '05/09/2025', status: 'Pago' },
+                { id: 402, tipo: 'Despesa', mes: '09/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/09/2025', pagamento: '25/09/2025', status: 'Pago' },
+                { id: 403, tipo: 'Despesa', mes: '10/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.75, vencimento: '25/10/2025', pagamento: '05/11/2025', status: 'Pago' },
+                { id: 404, tipo: 'Despesa', mes: '11/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/11/2025', pagamento: '25/11/2025', status: 'Pago' },
+                { id: 405, tipo: 'Despesa', mes: '12/2025', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.99, vencimento: '25/12/2025', pagamento: '05/01/2026', status: 'Pago' },
+                { id: 501, tipo: 'Despesa', mes: '12/2025', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 202.30, juros: 0, vencimento: '19/12/2025', pagamento: '12/02/2026', status: 'Atrasado' },
+                { id: 601, tipo: 'Despesa', mes: '12/2025', favorecido: 'Energisa', categoria: 'Energia', valor: 362.78, juros: 0, vencimento: '26/12/2025', pagamento: '17/02/2026', status: 'Atrasado' },
+                { id: 406, tipo: 'Despesa', mes: '01/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.83, vencimento: '25/01/2026', pagamento: '05/02/2026', status: 'Atrasado' },
+                { id: 502, tipo: 'Despesa', mes: '01/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 206.35, juros: 0, vencimento: '19/01/2026', pagamento: '12/02/2026', status: 'Atrasado' },
+                { id: 602, tipo: 'Despesa', mes: '01/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 160.65, juros: 0, vencimento: '26/01/2026', pagamento: '17/02/2026', status: 'Atrasado' },
+                // Feveiro 2026
+                { id: 101, tipo: 'Despesa', mes: '02/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
+                { id: 102, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
+                { id: 103, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
+                { id: 104, tipo: 'Despesa', mes: '02/2026', favorecido: 'Equipe de Limpeza', categoria: 'Serviços', valor: 800.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
+                { id: 105, tipo: 'Despesa', mes: '02/2026', favorecido: 'Aluguel Sala 603 (JK Business)', categoria: 'Infraestrutura', valor: 2500.00, juros: 0, vencimento: '23/02/2026', pagamento: '23/02/2026', status: 'Pago' },
+                { id: 106, tipo: 'Despesa', mes: '02/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 313.73, juros: 0, vencimento: '26/02/2026', pagamento: '17/02/2026', status: 'Adiantado' },
+                { id: 107, tipo: 'Despesa', mes: '02/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 208.45, juros: 0, vencimento: '19/02/2026', pagamento: '12/02/2026', status: 'Adiantado' },
+                { id: 407, tipo: 'Despesa', mes: '02/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.87, vencimento: '25/02/2026', pagamento: '09/03/2026', status: 'Atrasado' },
+                // Março 2026
+                { id: 201, tipo: 'Despesa', mes: '03/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
+                { id: 202, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
+                { id: 203, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
+                { id: 204, tipo: 'Despesa', mes: '03/2026', favorecido: 'Equipe de Limpeza', categoria: 'Serviços', valor: 800.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
+                { id: 205, tipo: 'Despesa', mes: '03/2026', favorecido: 'Mastercont Contadores', categoria: 'Contabilidade', valor: 370.00, juros: 0, vencimento: '10/03/2026', pagamento: '-', status: 'Pendente' },
+                { id: 206, tipo: 'Despesa', mes: '03/2026', favorecido: 'Aluguel Sala 603 (JK Business)', categoria: 'Infraestrutura', valor: 2500.00, juros: 0, vencimento: '23/03/2026', pagamento: '-', status: 'Pendente' },
+                { id: 207, tipo: 'Despesa', mes: '03/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 232.20, juros: 0, vencimento: '19/03/2026', pagamento: '-', status: 'Atrasado' },
+                { id: 208, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Apur. Fev)', categoria: 'Impostos', valor: 549.01, juros: 0, vencimento: '20/03/2026', pagamento: '-', status: 'Atrasado' },
+                { id: 408, tipo: 'Despesa', mes: '03/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/03/2026', pagamento: '09/03/2026', status: 'Adiantado' },
+                { id: 210, tipo: 'Despesa', mes: '03/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 258.29, juros: 0, vencimento: '26/03/2026', pagamento: '-', status: 'Pendente' },
+                { id: 211, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Parc. 7/17)', categoria: 'Impostos', valor: 341.57, juros: 0, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' },
+                { id: 212, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Parc. 8/17)', categoria: 'Impostos', valor: 341.57, juros: 0, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' }
+            ];
 
-            // HISTÓRICO ENERGISA (Pagamento em lote 17/02)
-            { id: 601, tipo: 'Despesa', mes: '12/2025', favorecido: 'Energisa', categoria: 'Energia', valor: 362.78, juros: 0, vencimento: '26/12/2025', pagamento: '17/02/2026', status: 'Atrasado' },
-            { id: 602, tipo: 'Despesa', mes: '01/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 160.65, juros: 0, vencimento: '26/01/2026', pagamento: '17/02/2026', status: 'Atrasado' },
-            { id: 106, tipo: 'Despesa', mes: '02/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 313.73, juros: 0, vencimento: '26/02/2026', pagamento: '17/02/2026', status: 'Adiantado' },
-            { id: 210, tipo: 'Despesa', mes: '03/2026', favorecido: 'Energisa', categoria: 'Energia', valor: 258.29, juros: 0, vencimento: '26/03/2026', pagamento: '-', status: 'Pendente' },
-
-            // HISTÓRICO BRK SANEAMENTO 
-            { id: 501, tipo: 'Despesa', mes: '12/2025', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 202.30, juros: 0, vencimento: '19/12/2025', pagamento: '12/02/2026', status: 'Atrasado' },
-            { id: 502, tipo: 'Despesa', mes: '01/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 206.35, juros: 0, vencimento: '19/01/2026', pagamento: '12/02/2026', status: 'Atrasado' },
-            { id: 107, tipo: 'Despesa', mes: '02/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 208.45, juros: 0, vencimento: '19/02/2026', pagamento: '12/02/2026', status: 'Adiantado' },
-            { id: 207, tipo: 'Despesa', mes: '03/2026', favorecido: 'BRK Saneamento', categoria: 'Água', valor: 232.20, juros: 0, vencimento: '19/03/2026', pagamento: '-', status: 'Atrasado' },
-
-            // HISTÓRICO PRONTO FIBRA
-            { id: 406, tipo: 'Despesa', mes: '01/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.83, vencimento: '25/01/2026', pagamento: '05/02/2026', status: 'Atrasado' },
-            { id: 407, tipo: 'Despesa', mes: '02/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 2.87, vencimento: '25/02/2026', pagamento: '09/03/2026', status: 'Atrasado' },
-            { id: 408, tipo: 'Despesa', mes: '03/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/03/2026', pagamento: '09/03/2026', status: 'Adiantado' },
-            { id: 409, tipo: 'Despesa', mes: '04/2026', favorecido: 'Pronto Fibra', categoria: 'Internet', valor: 119.90, juros: 0, vencimento: '25/04/2026', pagamento: '-', status: 'Pendente' },
-
-            // FEVEREIRO 2026 
-            { id: 101, tipo: 'Despesa', mes: '02/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
-            { id: 102, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
-            { id: 103, tipo: 'Despesa', mes: '02/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
-            { id: 104, tipo: 'Despesa', mes: '02/2026', favorecido: 'Equipe de Limpeza', categoria: 'Serviços', valor: 800.00, juros: 0, vencimento: '05/02/2026', pagamento: '05/02/2026', status: 'Pago' },
-            { id: 105, tipo: 'Despesa', mes: '02/2026', favorecido: 'Aluguel Sala 603 (JK Business)', categoria: 'Infraestrutura', valor: 2500.00, juros: 0, vencimento: '23/02/2026', pagamento: '23/02/2026', status: 'Pago' },
+            // Gerador Automático para o resto de 2026 (Abril a Dezembro)
+            const custosFixos = [
+                { f: 'Iago Manguary', c: 'Controller Jurídico', v: 1800, d: '05' },
+                { f: 'Adv. Geovana', c: 'Honorários', v: 1000, d: '05' },
+                { f: 'Adv. Felipe', c: 'Honorários', v: 1000, d: '05' },
+                { f: 'Equipe de Limpeza', c: 'Serviços', v: 800, d: '05' },
+                { f: 'Mastercont Contadores', c: 'Contabilidade', v: 370, d: '10' },
+                { f: 'Aluguel Sala 603 (JK Business)', c: 'Infraestrutura', v: 2500, d: '23' },
+                { f: 'Pronto Fibra', c: 'Internet', v: 119.90, d: '25' }
+            ];
             
-            // MARÇO 2026
-            { id: 201, tipo: 'Despesa', mes: '03/2026', favorecido: 'Iago Manguary', categoria: 'Controller Jurídico', valor: 1800.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
-            { id: 202, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Geovana', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
-            { id: 203, tipo: 'Despesa', mes: '03/2026', favorecido: 'Adv. Felipe', categoria: 'Honorários', valor: 1000.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
-            { id: 204, tipo: 'Despesa', mes: '03/2026', favorecido: 'Equipe de Limpeza', categoria: 'Serviços', valor: 800.00, juros: 0, vencimento: '05/03/2026', pagamento: '05/03/2026', status: 'Pago' },
-            { id: 205, tipo: 'Despesa', mes: '03/2026', favorecido: 'Mastercont Contadores', categoria: 'Contabilidade', valor: 370.00, juros: 0, vencimento: '10/03/2026', pagamento: '-', status: 'Pendente' },
-            { id: 206, tipo: 'Despesa', mes: '03/2026', favorecido: 'Aluguel Sala 603 (JK Business)', categoria: 'Infraestrutura', valor: 2500.00, juros: 0, vencimento: '23/03/2026', pagamento: '-', status: 'Pendente' },
-            { id: 208, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Apur. Fev)', categoria: 'Impostos', valor: 549.01, juros: 0, vencimento: '20/03/2026', pagamento: '-', status: 'Atrasado' },
-            { id: 211, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Parc. 7/17)', categoria: 'Impostos', valor: 341.57, juros: 0, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' },
-            { id: 212, tipo: 'Despesa', mes: '03/2026', favorecido: 'Simples Nacional (Parc. 8/17)', categoria: 'Impostos', valor: 341.57, juros: 0, vencimento: '31/03/2026', pagamento: '-', status: 'Pendente' }
-        ];
+            let idCount = 5000;
+            for(let m = 4; m <= 12; m++) {
+                let mes = String(m).padStart(2, '0');
+                custosFixos.forEach(item => {
+                    data.push({
+                        id: idCount++, tipo: 'Despesa', mes: `${mes}/2026`,
+                        favorecido: item.f, categoria: item.c, valor: item.v, juros: 0,
+                        vencimento: `${item.d}/${mes}/2026`, pagamento: '-', status: 'Pendente'
+                    });
+                });
+            }
+            return data;
+        })();
 
         function inicializarBD() {
             const dbSalvo = localStorage.getItem(DB_KEY);
@@ -362,17 +383,13 @@
         function salvarBD() { localStorage.setItem(DB_KEY, JSON.stringify(database)); }
 
         // ==========================================
-        // 3. PESQUISA E FILTRAGEM DINÂMICA
+        // FUNCIONALIDADES GERAIS DE BUSCA E FILTRO
         // ==========================================
-        
-        // Função Global de Pesquisa
         function pesquisarTabela(tbodyId, inputId) {
             const termo = document.getElementById(inputId).value.toLowerCase();
             const linhas = document.querySelectorAll(`#${tbodyId} tr`);
-            
             linhas.forEach(linha => {
-                const textoLinha = linha.innerText.toLowerCase();
-                linha.style.display = textoLinha.includes(termo) ? '' : 'none';
+                linha.style.display = linha.innerText.toLowerCase().includes(termo) ? '' : 'none';
             });
         }
 
@@ -381,78 +398,51 @@
         function popularFiltrosMeses() {
             const dashFilter = document.getElementById('dash-month-filter');
             const extratoFilter = document.getElementById('month-filter');
-
             const currentDashVal = dashFilter.value;
             const currentExtratoVal = extratoFilter.value;
 
-            let mesesUnicos = [...new Set(database.map(item => item.mes))];
-
-            mesesUnicos.sort((a, b) => {
-                const [mA, yA] = a.split('/');
-                const [mB, yB] = b.split('/');
+            let mesesUnicos = [...new Set(database.map(item => item.mes))].sort((a, b) => {
+                const [mA, yA] = a.split('/'); const [mB, yB] = b.split('/');
                 return new Date(yA, mA - 1) - new Date(yB, mB - 1);
             });
 
             dashFilter.innerHTML = '';
+            extratoFilter.innerHTML = '<option value="Todos">Todos os Meses</option>';
+            
             mesesUnicos.forEach(mes => {
                 const [m, y] = mes.split('/');
                 dashFilter.insertAdjacentHTML('beforeend', `<option value="${mes}">${nomesMeses[m]} / ${y}</option>`);
-            });
-
-            extratoFilter.innerHTML = '<option value="Todos">Todos os Meses</option>';
-            mesesUnicos.forEach(mes => {
-                const [m, y] = mes.split('/');
                 extratoFilter.insertAdjacentHTML('beforeend', `<option value="${mes}">${nomesMeses[m]} / ${y}</option>`);
             });
 
-            if (mesesUnicos.includes(currentDashVal)) {
-                dashFilter.value = currentDashVal;
-            } else if (mesesUnicos.length > 0) {
-                dashFilter.value = mesesUnicos.includes('03/2026') ? '03/2026' : mesesUnicos[mesesUnicos.length - 1]; 
-            }
+            if (mesesUnicos.includes(currentDashVal)) dashFilter.value = currentDashVal;
+            else if (mesesUnicos.length > 0) dashFilter.value = mesesUnicos.includes('03/2026') ? '03/2026' : mesesUnicos[mesesUnicos.length - 1]; 
 
-            if (currentExtratoVal === 'Todos' || mesesUnicos.includes(currentExtratoVal)) {
-                extratoFilter.value = currentExtratoVal;
-            } else if (mesesUnicos.length > 0) {
-                extratoFilter.value = mesesUnicos.includes('03/2026') ? '03/2026' : mesesUnicos[mesesUnicos.length - 1];
-            }
+            if (currentExtratoVal === 'Todos' || mesesUnicos.includes(currentExtratoVal)) extratoFilter.value = currentExtratoVal;
+            else if (mesesUnicos.length > 0) extratoFilter.value = mesesUnicos.includes('03/2026') ? '03/2026' : mesesUnicos[mesesUnicos.length - 1];
         }
 
         function popularFiltroRelatorio() {
             const select = document.getElementById('relatorio-mes');
             const currentVal = select.value;
             
-            let mesesPagamento = [];
-            database.forEach(i => {
-                if (i.tipo === 'Despesa' && i.pagamento && i.pagamento !== '-') {
-                    const partes = i.pagamento.split('/');
-                    if (partes.length === 3) mesesPagamento.push(`${partes[1]}/${partes[2]}`);
-                }
-            });
-            
-            let mesesUnicos = [...new Set(mesesPagamento)];
-            mesesUnicos.sort((a, b) => {
-                const [mA, yA] = a.split('/');
-                const [mB, yB] = b.split('/');
+            let mesesPag = [...new Set(database.filter(i => i.tipo === 'Despesa' && i.pagamento && i.pagamento !== '-').map(i => {
+                const p = i.pagamento.split('/'); return `${p[1]}/${p[2]}`;
+            }))].sort((a, b) => {
+                const [mA, yA] = a.split('/'); const [mB, yB] = b.split('/');
                 return new Date(yA, mA - 1) - new Date(yB, mB - 1);
             });
 
             select.innerHTML = '<option value="Todos">Todo o Histórico</option>';
-            mesesUnicos.forEach(mes => {
+            mesesPag.forEach(mes => {
                 const [m, y] = mes.split('/');
                 select.insertAdjacentHTML('beforeend', `<option value="${mes}">${nomesMeses[m]} / ${y}</option>`);
             });
 
-            if (currentVal === 'Todos' || mesesUnicos.includes(currentVal)) {
-                select.value = currentVal;
-            } else if (mesesUnicos.length > 0) {
-                select.value = mesesUnicos.includes('03/2026') ? '03/2026' : mesesUnicos[mesesUnicos.length - 1];
-            }
+            if (currentVal === 'Todos' || mesesPag.includes(currentVal)) select.value = currentVal;
+            else if (mesesPag.length > 0) select.value = mesesPag.includes('03/2026') ? '03/2026' : mesesPag[mesesPag.length - 1];
         }
 
-        // ==========================================
-        // 4. NAVEGAÇÃO
-        // ==========================================
         const formatCurrency = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
         function changeView(view) {
@@ -466,12 +456,19 @@
         }
 
         // ==========================================
-        // 5. CRUD (CRIAR, EDITAR, ELIMINAR)
+        // MÓDULO CRUD + RECORRÊNCIA + DUPLICAR
         // ==========================================
+        function toggleRecorrencia() {
+            const val = document.getElementById('inp-recorrencia').value;
+            document.getElementById('div-parcelas').style.display = val === 'multiplo' ? 'flex' : 'none';
+        }
+
         function abrirModal(id = null) {
             document.getElementById('modal-lancamento').classList.remove('hidden');
             if(id) {
                 document.getElementById('modal-titulo').innerText = "Editar Lançamento";
+                document.getElementById('box-recorrencia').style.display = 'none'; // Esconde na edição
+                
                 const item = database.find(i => i.id === id);
                 document.getElementById('inp-id').value = item.id;
                 document.getElementById('inp-tipo').value = item.tipo;
@@ -479,20 +476,15 @@
                 document.getElementById('inp-descricao').value = item.favorecido;
                 document.getElementById('inp-categoria').value = item.categoria;
                 document.getElementById('inp-vencimento').value = item.vencimento.split('/').reverse().join('-');
-                
-                if (item.pagamento && item.pagamento !== '-') {
-                    document.getElementById('inp-pagamento').value = item.pagamento.split('/').reverse().join('-');
-                } else {
-                    document.getElementById('inp-pagamento').value = '';
-                }
-
+                document.getElementById('inp-pagamento').value = item.pagamento !== '-' ? item.pagamento.split('/').reverse().join('-') : '';
                 document.getElementById('inp-valor').value = item.valor;
                 document.getElementById('inp-juros').value = item.juros || 0;
             } else {
                 document.getElementById('modal-titulo').innerText = "Novo Lançamento";
                 document.getElementById('form-lancamento').reset();
                 document.getElementById('inp-id').value = '';
-                document.getElementById('inp-juros').value = 0;
+                document.getElementById('box-recorrencia').style.display = 'block'; // Mostra na criação
+                document.getElementById('div-parcelas').style.display = 'none';
             }
         }
 
@@ -501,37 +493,66 @@
         function guardarLancamento(e) {
             e.preventDefault();
             const idForm = document.getElementById('inp-id').value;
+            const isRecorrente = document.getElementById('inp-recorrencia') ? document.getElementById('inp-recorrencia').value === 'multiplo' : false;
+            const qtdMeses = isRecorrente ? parseInt(document.getElementById('inp-parcelas').value) : 1;
+
             const dateVencStr = document.getElementById('inp-vencimento').value;
             const datePagStr = document.getElementById('inp-pagamento').value;
-
             const partesVenc = dateVencStr.split('-');
-            const mesRef = `${partesVenc[1]}/${partesVenc[0]}`;
-            const dataVenc = `${partesVenc[2]}/${partesVenc[1]}/${partesVenc[0]}`;
-            
-            let dataPag = '-';
-            if (datePagStr) {
-                const partesPag = datePagStr.split('-');
-                dataPag = `${partesPag[2]}/${partesPag[1]}/${partesPag[0]}`;
-            }
+            let dataBaseVencimento = new Date(partesVenc[0], partesVenc[1] - 1, partesVenc[2]);
 
-            const dadosSalvos = {
-                tipo: document.getElementById('inp-tipo').value,
-                mes: mesRef,
-                favorecido: document.getElementById('inp-descricao').value,
-                categoria: document.getElementById('inp-categoria').value,
-                valor: parseFloat(document.getElementById('inp-valor').value),
-                juros: parseFloat(document.getElementById('inp-juros').value) || 0,
-                vencimento: dataVenc,
-                pagamento: dataPag,
-                status: document.getElementById('inp-status').value
-            };
+            // Se for Edição ou Cadastro Simples (Sem recorrência)
+            if (idForm || !isRecorrente) {
+                const mesRef = `${partesVenc[1]}/${partesVenc[0]}`;
+                const dataVenc = `${partesVenc[2]}/${partesVenc[1]}/${partesVenc[0]}`;
+                let dataPag = datePagStr ? `${datePagStr.split('-')[2]}/${datePagStr.split('-')[1]}/${datePagStr.split('-')[0]}` : '-';
 
-            if(idForm) { 
-                const index = database.findIndex(i => i.id == idForm);
-                database[index] = { ...database[index], ...dadosSalvos };
-            } else { 
-                dadosSalvos.id = Date.now();
-                database.push(dadosSalvos);
+                const dadosSalvos = {
+                    tipo: document.getElementById('inp-tipo').value,
+                    mes: mesRef,
+                    favorecido: document.getElementById('inp-descricao').value,
+                    categoria: document.getElementById('inp-categoria').value,
+                    valor: parseFloat(document.getElementById('inp-valor').value),
+                    juros: parseFloat(document.getElementById('inp-juros').value) || 0,
+                    vencimento: dataVenc,
+                    pagamento: dataPag,
+                    status: document.getElementById('inp-status').value
+                };
+
+                if(idForm) { 
+                    const index = database.findIndex(i => i.id == idForm);
+                    database[index] = { ...database[index], ...dadosSalvos };
+                } else { 
+                    dadosSalvos.id = Date.now();
+                    database.push(dadosSalvos);
+                }
+            } 
+            // NOVO: Processamento de Recorrência (Múltiplos meses)
+            else {
+                for (let i = 0; i < qtdMeses; i++) {
+                    let nVenc = new Date(dataBaseVencimento);
+                    nVenc.setMonth(nVenc.getMonth() + i);
+                    
+                    let nDia = String(nVenc.getDate()).padStart(2,'0');
+                    let nMes = String(nVenc.getMonth()+1).padStart(2,'0');
+                    let nAno = nVenc.getFullYear();
+
+                    let dataPag = (i === 0 && datePagStr) ? `${datePagStr.split('-')[2]}/${datePagStr.split('-')[1]}/${datePagStr.split('-')[0]}` : '-';
+
+                    database.push({
+                        id: Date.now() + i,
+                        tipo: document.getElementById('inp-tipo').value,
+                        mes: `${nMes}/${nAno}`,
+                        favorecido: document.getElementById('inp-descricao').value,
+                        categoria: document.getElementById('inp-categoria').value,
+                        valor: parseFloat(document.getElementById('inp-valor').value),
+                        juros: (i === 0) ? (parseFloat(document.getElementById('inp-juros').value) || 0) : 0,
+                        vencimento: `${nDia}/${nMes}/${nAno}`,
+                        pagamento: dataPag,
+                        status: (i === 0) ? document.getElementById('inp-status').value : 'Pendente'
+                    });
+                }
+                alert(`${qtdMeses} lançamentos gerados com sucesso!`);
             }
 
             salvarBD(); 
@@ -544,52 +565,59 @@
             popularFiltroAnalise();
         }
 
-        function excluirLancamento(id) {
-            if(confirm('Tem a certeza que deseja eliminar este registro?')) {
-                database = database.filter(item => item.id !== id);
-                salvarBD(); 
-                popularFiltrosMeses(); 
-                popularFiltroRelatorio();
-                calcularDashboard(); 
-                renderTable(); 
-                gerarRelatorio();
+        // Função de Duplicar Lançamento na própria tabela
+        function duplicarLancamento(id) {
+            const item = database.find(i => i.id === id);
+            if(item) {
+                const novoItem = { 
+                    ...item, 
+                    id: Date.now(), 
+                    status: 'Pendente', 
+                    pagamento: '-',
+                    juros: 0 
+                };
+                database.push(novoItem);
+                salvarBD();
+                popularFiltrosMeses();
+                calcularDashboard();
+                renderTable();
                 popularFiltroAnalise();
             }
         }
 
+        function excluirLancamento(id) {
+            if(confirm('Tem a certeza que deseja eliminar este registro?')) {
+                database = database.filter(item => item.id !== id);
+                salvarBD(); popularFiltrosMeses(); popularFiltroRelatorio(); calcularDashboard(); renderTable(); gerarRelatorio(); popularFiltroAnalise();
+            }
+        }
+
         // ==========================================
-        // 6. RENDERIZAÇÃO DAS ABAS
+        // RENDERIZAÇÃO 
         // ==========================================
         function calcularDashboard() {
             const mesSel = document.getElementById('dash-month-filter').value;
             let totRec = 0, totDesp = 0;
-
             database.forEach(item => {
                 if(item.mes === mesSel) {
-                    const valorTotalItem = item.valor + (item.juros || 0);
-                    if(item.tipo === 'Receita') totRec += valorTotalItem;
-                    if(item.tipo === 'Despesa') totDesp += valorTotalItem;
+                    const vTotal = item.valor + (item.juros || 0);
+                    item.tipo === 'Receita' ? totRec += vTotal : totDesp += vTotal;
                 }
             });
-
             document.getElementById('kpi-receitas').innerText = formatCurrency(totRec);
             document.getElementById('kpi-despesas').innerText = formatCurrency(totDesp);
-            const lucro = totRec - totDesp;
-            document.getElementById('kpi-lucro').innerText = formatCurrency(lucro);
-            document.getElementById('kpi-lucro').className = lucro < 0 ? "text-3xl font-black text-red-600" : "text-3xl font-black text-[#004d2c]";
-
+            document.getElementById('kpi-lucro').innerText = formatCurrency(totRec - totDesp);
+            document.getElementById('kpi-lucro').className = (totRec - totDesp) < 0 ? "text-3xl font-black text-red-600" : "text-3xl font-black text-[#004d2c]";
             atualizarGraficoFluxo();
         }
 
         function renderTable() {
-            document.getElementById('busca-extrato').value = ''; // Limpa a busca ao mudar de mês
+            document.getElementById('busca-extrato').value = '';
             const mesSel = document.getElementById('month-filter').value;
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
 
             let filteredData = mesSel === 'Todos' ? database : database.filter(item => item.mes === mesSel);
-            
-            // Ordenar por Vencimento para a visualização do Livro Caixa
             filteredData.sort((a, b) => {
                 const dA = a.vencimento.split('/').reverse().join('');
                 const dB = b.vencimento.split('/').reverse().join('');
@@ -616,12 +644,12 @@
                         <td class="px-6 py-4 font-mono text-xs text-gray-500">${item.vencimento}</td>
                         <td class="px-6 py-4 font-mono text-xs">${displayPagamento}</td>
                         <td class="px-6 py-4 font-bold text-gray-900">${item.favorecido} <br><span class="text-[10px] font-normal text-gray-400 uppercase tracking-widest">${item.categoria}</span></td>
-                        <td class="px-6 py-4 text-right font-mono text-sm">${formatCurrency(item.valor)}</td>
-                        <td class="px-6 py-4 text-right">${isRec ? '-' : strJuros}</td>
+                        <td class="px-6 py-4 text-right font-mono text-sm">${formatCurrency(item.valor)}<br>${strJuros}</td>
                         <td class="px-6 py-4 text-right font-mono font-black ${corTipo} text-base">${isRec ? '+' : '-'} ${formatCurrency(total)}</td>
-                        <td class="px-6 py-4 text-center space-x-3">
-                            <button onclick="abrirModal(${item.id})" class="text-blue-500 hover:text-blue-700 font-bold text-xs uppercase tracking-wider">Editar</button>
-                            <button onclick="excluirLancamento(${item.id})" class="text-red-400 hover:text-red-600 font-bold text-xs uppercase tracking-wider">Apagar</button>
+                        <td class="px-6 py-4 text-center space-x-2">
+                            <button onclick="abrirModal(${item.id})" class="text-blue-500 hover:text-blue-700 font-bold text-[10px] uppercase tracking-wider">Edit</button>
+                            <button onclick="duplicarLancamento(${item.id})" class="text-green-600 hover:text-green-800 font-bold text-[10px] uppercase tracking-wider">Dup</button>
+                            <button onclick="excluirLancamento(${item.id})" class="text-red-400 hover:text-red-600 font-bold text-[10px] uppercase tracking-wider">Del</button>
                         </td>
                     </tr>
                 `;
@@ -629,17 +657,13 @@
             });
         }
 
-        // ==========================================
-        // ABA: RELATÓRIO DE PAGAMENTOS
-        // ==========================================
         function gerarRelatorio() {
-            document.getElementById('busca-relatorio').value = ''; // Limpa a busca
+            document.getElementById('busca-relatorio').value = ''; 
             const mesSel = document.getElementById('relatorio-mes').value;
             const tbody = document.getElementById('relatorio-body');
             tbody.innerHTML = '';
             
             let totalPago = 0;
-            
             let pagos = database.filter(i => i.tipo === 'Despesa' && i.pagamento && i.pagamento !== '-');
             
             if (mesSel !== 'Todos') {
@@ -649,7 +673,6 @@
                 });
             }
             
-            // Ordenar por data de pagamento
             pagos.sort((a, b) => {
                 const dA = a.pagamento.split('/').reverse().join('');
                 const dB = b.pagamento.split('/').reverse().join('');
@@ -673,65 +696,43 @@
                 `;
                 tbody.insertAdjacentHTML('beforeend', row);
             });
-            
             document.getElementById('relatorio-total').innerText = formatCurrency(totalPago);
         }
 
         // ==========================================
-        // 7. GRÁFICOS DINÂMICOS
+        // GRÁFICOS E ANÁLISE
         // ==========================================
         function atualizarGraficoFluxo() {
             if (chartFluxo) chartFluxo.destroy();
-            
-            let mesesUnicos = [...new Set(database.map(item => item.mes))];
-            mesesUnicos.sort((a, b) => {
-                const [mA, yA] = a.split('/');
-                const [mB, yB] = b.split('/');
+            let mesesUnicos = [...new Set(database.map(item => item.mes))].sort((a, b) => {
+                const [mA, yA] = a.split('/'); const [mB, yB] = b.split('/');
                 return new Date(yA, mA - 1) - new Date(yB, mB - 1);
             });
-
             const meses = mesesUnicos.slice(-6); 
             
-            let recData = new Array(meses.length).fill(0);
-            let desData = new Array(meses.length).fill(0);
-
+            let recData = new Array(meses.length).fill(0), desData = new Array(meses.length).fill(0);
             database.forEach(item => {
                 const idx = meses.indexOf(item.mes);
                 if(idx > -1) {
                     const val = item.valor + (item.juros || 0);
-                    if(item.tipo === 'Receita') recData[idx] += val;
-                    if(item.tipo === 'Despesa') desData[idx] += val;
+                    item.tipo === 'Receita' ? recData[idx] += val : desData[idx] += val;
                 }
             });
 
-            const nomesCurtos = { '01': 'Jan', '02': 'Fev', '03': 'Mar', '04': 'Abr', '05': 'Mai', '06': 'Jun', '07': 'Jul', '08': 'Ago', '09': 'Set', '10': 'Out', '11': 'Nov', '12': 'Dez' };
-            const labels = meses.map(m => {
-                const [mes, ano] = m.split('/');
-                return `${nomesCurtos[mes]}/${ano.slice(2)}`;
-            });
+            const nCurtos = { '01': 'Jan', '02': 'Fev', '03': 'Mar', '04': 'Abr', '05': 'Mai', '06': 'Jun', '07': 'Jul', '08': 'Ago', '09': 'Set', '10': 'Out', '11': 'Nov', '12': 'Dez' };
+            const labels = meses.map(m => `${nCurtos[m.split('/')[0]]}/${m.split('/')[1].slice(2)}`);
 
-            const ctx = document.getElementById('fluxoChart').getContext('2d');
-            chartFluxo = new Chart(ctx, {
+            chartFluxo = new Chart(document.getElementById('fluxoChart').getContext('2d'), {
                 type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'Receitas', data: recData, backgroundColor: '#15803d', borderRadius: 4 },
-                        { label: 'Despesas', data: desData, backgroundColor: '#b91c1c', borderRadius: 4 }
-                    ]
-                },
+                data: { labels, datasets: [ { label: 'Receitas', data: recData, backgroundColor: '#15803d', borderRadius: 4 }, { label: 'Despesas', data: desData, backgroundColor: '#b91c1c', borderRadius: 4 } ] },
                 options: { responsive: true, maintainAspectRatio: false }
             });
         }
 
-        // ==========================================
-        // 8. ANÁLISE COMPARATIVA
-        // ==========================================
         function popularFiltroAnalise() {
             const select = document.getElementById('analise-favorecido');
-            const favorecidos = [...new Set(database.filter(i => i.tipo === 'Despesa').map(i => i.favorecido))];
             select.innerHTML = '';
-            favorecidos.sort().forEach(fav => {
+            [...new Set(database.filter(i => i.tipo === 'Despesa').map(i => i.favorecido))].sort().forEach(fav => {
                 select.insertAdjacentHTML('beforeend', `<option value="${fav}">${fav}</option>`);
             });
         }
@@ -740,13 +741,9 @@
             const favSel = document.getElementById('analise-favorecido').value;
             if(!favSel) return;
 
-            let historico = database.filter(i => i.favorecido === favSel).map(i => {
-                return { mesRaw: i.mes, valTotal: i.valor + (i.juros || 0) };
-            });
-
+            let historico = database.filter(i => i.favorecido === favSel).map(i => ({ mesRaw: i.mes, valTotal: i.valor + (i.juros || 0) }));
             historico.sort((a,b) => {
-                const [mA, yA] = a.mesRaw.split('/');
-                const [mB, yB] = b.mesRaw.split('/');
+                const [mA, yA] = a.mesRaw.split('/'); const [mB, yB] = b.mesRaw.split('/');
                 return new Date(yA, mA-1) - new Date(yB, mB-1);
             });
 
@@ -754,47 +751,24 @@
             const dataPts = historico.map(i => i.valTotal);
 
             if(dataPts.length > 0) {
-                const media = dataPts.reduce((a,b) => a+b, 0) / dataPts.length;
-                const max = Math.max(...dataPts);
-                document.getElementById('analise-media').innerText = formatCurrency(media);
-                document.getElementById('analise-pico').innerText = formatCurrency(max);
+                document.getElementById('analise-media').innerText = formatCurrency(dataPts.reduce((a,b)=>a+b,0)/dataPts.length);
+                document.getElementById('analise-pico').innerText = formatCurrency(Math.max(...dataPts));
 
                 if(dataPts.length > 1) {
-                    const ult = dataPts[dataPts.length-1];
-                    const penult = dataPts[dataPts.length-2];
-                    const diff = ((ult - penult) / penult) * 100;
-                    
+                    const diff = ((dataPts[dataPts.length-1] - dataPts[dataPts.length-2]) / dataPts[dataPts.length-2]) * 100;
                     const elTend = document.getElementById('analise-tendencia');
-                    if(diff > 0) {
-                        elTend.innerHTML = `<span class="text-red-600">▲ Subiu ${diff.toFixed(1)}%</span>`;
-                    } else if (diff < 0) {
-                        elTend.innerHTML = `<span class="text-green-600">▼ Caiu ${Math.abs(diff).toFixed(1)}%</span>`;
-                    } else {
-                        elTend.innerHTML = `<span class="text-gray-500">■ Estável</span>`;
-                    }
+                    if(diff > 0) elTend.innerHTML = `<span class="text-red-600">▲ Subiu ${diff.toFixed(1)}%</span>`;
+                    else if (diff < 0) elTend.innerHTML = `<span class="text-green-600">▼ Caiu ${Math.abs(diff).toFixed(1)}%</span>`;
+                    else elTend.innerHTML = `<span class="text-gray-500">■ Estável</span>`;
                 } else {
                     document.getElementById('analise-tendencia').innerText = "Sem histórico anterior";
                 }
             }
 
             if(chartAnalise) chartAnalise.destroy();
-            const ctx = document.getElementById('analiseChart').getContext('2d');
-            chartAnalise = new Chart(ctx, {
+            chartAnalise = new Chart(document.getElementById('analiseChart').getContext('2d'), {
                 type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: `Evolução de Gastos: ${favSel}`,
-                        data: dataPts,
-                        borderColor: '#c5a36b',
-                        backgroundColor: 'rgba(197, 163, 107, 0.2)',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#004d2c',
-                        pointRadius: 5,
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
+                data: { labels, datasets: [{ label: `Evolução de Gastos: ${favSel}`, data: dataPts, borderColor: '#c5a36b', backgroundColor: 'rgba(197, 163, 107, 0.2)', borderWidth: 3, fill: true, tension: 0.3 }] },
                 options: { responsive: true, maintainAspectRatio: false }
             });
         }
